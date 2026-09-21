@@ -1,0 +1,46 @@
+{% extends 'leads/base.html' %}
+{% block title %}Hotel Reservations - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 class="page-title" style="margin:0;">Hotel Reservations</h1>
+    <div class="action-links">
+        <a href="{% url 'hotel_list' %}" class="btn btn-small" style="background:#fff; color:var(--teal); border:1px solid var(--teal);">Hotels</a>
+        <a href="{% url 'hotel_reservation_create' %}" class="btn">+ New Reservation</a>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>Hotel</th><th>Guest / Lead</th><th>Room</th><th>Meal Plan</th><th>Check-in</th><th>Check-out</th><th>Nights</th><th>Total</th><th>Status</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservations %}
+            <tr>
+                <td>{{ r.hotel|default:"-" }}</td>
+                <td>{{ r.lead.name|default:"-" }}</td>
+                <td>{{ r.room_type|default:"-" }}</td>
+                <td>{{ r.get_meal_plan_display }}</td>
+                <td>{{ r.check_in|date:"d M Y"|default:"-" }}</td>
+                <td>{{ r.check_out|date:"d M Y"|default:"-" }}</td>
+                <td>{{ r.nights }}</td>
+                <td>{{ r.total_cost }}</td>
+                <td><span class="pill pill-{% if r.status == 'confirmed' %}converted{% elif r.status == 'cancelled' %}lost{% else %}quotation{% endif %}">{{ r.get_status_display }}</span></td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'hotel_reservation_edit' r.pk %}">Edit</a>
+                        <a href="{% url 'hotel_reservation_delete' r.pk %}" onclick="return confirm('Delete this reservation?')">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10" class="empty-state">No hotel reservations yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

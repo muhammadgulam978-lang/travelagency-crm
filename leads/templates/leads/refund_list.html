@@ -1,0 +1,43 @@
+{% extends 'leads/base.html' %}
+{% block title %}Refunds — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Refund Approvals</h1><p>{{ pending_count }} pending request{{ pending_count|pluralize }} — money moves only after approval.</p></div>
+</div>
+
+<div class="r-tabs">
+    <a class="r-tab {% if current_status == 'pending' %}active{% endif %}" href="?status=pending">Pending</a>
+    <a class="r-tab {% if current_status == 'completed' %}active{% endif %}" href="?status=completed">Completed</a>
+    <a class="r-tab {% if current_status == 'rejected' %}active{% endif %}" href="?status=rejected">Rejected</a>
+    <a class="r-tab {% if current_status == '' %}active{% endif %}" href="?status=">All</a>
+</div>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Booking</th><th>Amount</th><th>Reason</th><th>Requested by</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for r in refunds %}
+                <tr>
+                    <td><a href="{% url 'booking_finance_detail' r.booking.pk %}" class="r-cell-title">{{ r.booking.client_or_company_name }}</a></td>
+                    <td>Rs {{ r.amount|floatformat:0 }}</td>
+                    <td>{{ r.reason|truncatechars:50 }}</td>
+                    <td>{{ r.requested_by.get_full_name|default:r.requested_by.username|default:"—" }}</td>
+                    <td><span class="r-status st-{% if r.status == 'completed' %}confirmed{% elif r.status == 'rejected' %}cancelled{% else %}pending{% endif %}">{{ r.get_status_display }}</span></td>
+                    <td>
+                        {% if r.status == 'pending' %}
+                        <div class="r-row-actions">
+                            <a href="{% url 'refund_approve' r.pk %}" onclick="return confirm('Approve and issue this refund?');">Approve</a>
+                            <a href="{% url 'refund_reject' r.pk %}" class="danger" onclick="return confirm('Reject this refund request?');">Reject</a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6"><div class="r-empty"><div class="t">Nothing here</div>Refund requests submitted from a booking's finance page will show up here.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

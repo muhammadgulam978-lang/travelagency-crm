@@ -1,0 +1,146 @@
+{% extends 'leads/base.html' %}
+{% load custom_filters %}
+{% block title %}{{ title }} — Raabta360{% endblock %}
+
+{% block content %}
+<div class="r-page-head">
+    <div>
+        <h1>{{ title }}</h1>
+        <p>Every enquiry, scored and staged from first contact to booking.</p>
+    </div>
+    {% if request.user|has_full_access:'leads' %}
+    <div class="r-page-actions">
+        <a href="{% url 'create_lead' %}" class="r-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New lead
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="r-tabs">
+    {% for t in status_tabs %}
+    <a class="r-tab {% if current_status == t.code %}active{% endif %}"
+       href="{% if t.code == 'all' %}{% url 'all_leads' %}{% else %}{% url 'lead_status_list' t.code %}{% endif %}">
+        {{ t.label }}<span class="n">{{ t.count }}</span>
+    </a>
+    {% endfor %}
+</div>
+
+<form method="get" class="r-filters">
+    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search name, phone, email or destination…">
+
+    <select name="trip">
+        <option value="">All travel types</option>
+        {% for value, label in trip_types %}
+        <option value="{{ value }}" {% if request.GET.trip == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="source">
+        <option value="">All sources</option>
+        {% for value, label in lead_sources %}
+        <option value="{{ value }}" {% if request.GET.source == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="spo">
+        <option value="">All salespeople</option>
+        {% for spo in spos %}
+        <option value="{{ spo.id }}" {% if request.GET.spo == spo.id|stringformat:"s" %}selected{% endif %}>{{ spo.name }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="score">
+        <option value="">Newest first</option>
+        <option value="high" {% if request.GET.score == 'high' %}selected{% endif %}>Highest AI score</option>
+        <option value="low" {% if request.GET.score == 'low' %}selected{% endif %}>Lowest AI score</option>
+    </select>
+
+    <button type="submit" class="r-btn">Apply</button>
+</form>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead>
+                <tr>
+                    <th>Lead</th>
+                    <th>Travel type</th>
+                    <th>Destination</th>
+                    <th>Budget</th>
+                    <th>Stage</th>
+                    <th>AI score</th>
+                    <th>Next follow-up</th>
+                    <th>Salesperson</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr>
+                    <td>
+                        <a href="{% url 'lead_detail' lead.pk %}" class="r-cell-title">{{ lead.name }}</a>
+                        {% if lead.is_duplicate %}<span class="r-stage stage-lost" style="margin-left:6px;">Duplicate</span>{% endif %}
+                        <div class="r-cell-sub">{{ lead.contact_number }}</div>
+                    </td>
+                    <td>{{ lead.get_trip_type_display|default:"—" }}</td>
+                    <td>{{ lead.destination|default:"—" }}</td>
+                    <td>{% if lead.budget %}Rs {{ lead.budget|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td><span class="r-stage stage-{{ lead.status }}">{{ lead.get_status_display }}</span></td>
+                    <td>
+                        <div class="r-score">
+                            <span class="r-score-bar">
+                                <span class="r-score-fill {% if lead.ai_score >= 70 %}hi{% elif lead.ai_score < 40 %}lo{% endif %}" style="width:{{ lead.ai_score }}%;"></span>
+                            </span>
+                            <span class="r-score-num">{{ lead.ai_score }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% with nf=lead.followups.all|next_pending_followup %}
+                        {% if nf %}{{ nf.follow_up_date|date:"j M, g:i A" }}{% else %}<span style="color:var(--r-faint);">Not scheduled</span>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>{{ lead.spo.name|default:"—" }}</td>
+                    <td>
+                        <div class="r-row-actions">
+                            {% if request.user|has_full_access:'leads' %}
+                            <div class="r-stage-menu">
+                                <button type="button" onclick="this.parentNode.classList.toggle('open')"><span class="r-link">Stage</span></button>
+                                <div class="r-stage-menu-list">
+                                    {% for code, label in status_choices %}
+                                    <a href="{% url 'update_lead_status' lead.pk code %}">Mark as {{ label }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <a href="{% url 'lead_edit' lead.pk %}">Edit</a>
+                            <a href="{% url 'lead_delete' lead.pk %}" class="danger" onclick="return confirm('Delete this lead?');">Delete</a>
+                            {% else %}
+                            <a href="{% url 'lead_detail' lead.pk %}">View</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">
+                        <div class="r-empty">
+                            <div class="t">No leads in this stage</div>
+                            Change the filters above, or create a lead to get started.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script>
+document.addEventListener('click', function (e) {
+    document.querySelectorAll('.r-stage-menu.open').forEach(function (m) {
+        if (!m.contains(e.target)) m.classList.remove('open');
+    });
+});
+</script>
+{% endblock %}

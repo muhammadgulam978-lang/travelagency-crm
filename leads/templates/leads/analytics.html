@@ -1,0 +1,348 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+{% block title %}Analytics — Raabta360{% endblock %}
+
+{% block content %}
+<div class="r-page-head">
+    <div>
+        <h1>Analytics Dashboard</h1>
+        <p>Deep insights into your travel business performance.</p>
+    </div>
+    <div class="r-page-actions">
+        <form method="get" style="display:flex;gap:10px;align-items:center;">
+            <select name="months" class="r-btn ghost" style="padding:8px 12px;" onchange="this.form.submit()">
+                <option value="3" {% if months == 3 %}selected{% endif %}>Last 3 months</option>
+                <option value="6" {% if months == 6 %}selected{% endif %}>Last 6 months</option>
+                <option value="12" {% if months == 12 %}selected{% endif %}>Last 12 months</option>
+            </select>
+        </form>
+        <a href="{% url 'reports' %}" class="r-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>
+            Export report
+        </a>
+    </div>
+</div>
+
+{# ---------------------------------------------------------------- KPIs #}
+<div class="r-kpi-grid">
+    {% for k in a_kpis %}
+    <div class="r-kpi">
+        <span class="r-kpi-icon tone-{{ k.tone }}">
+            {% if k.icon == 'users' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/></svg>
+            {% elif k.icon == 'ticket' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 5v14"/></svg>
+            {% elif k.icon == 'revenue' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+            {% elif k.icon == 'chart' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7"/><rect x="13" y="7" width="3" height="11"/></svg>
+            {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+            {% endif %}
+        </span>
+        <span class="r-kpi-body">
+            <span class="r-kpi-label">{{ k.label }}</span>
+            <span class="r-kpi-value">{{ k.value }}</span>
+            <span class="r-kpi-delta">
+                {% if k.delta >= 0 %}<span class="up">&#9650; {{ k.delta }}%</span>
+                {% else %}<span class="down">&#9660; {{ k.delta }}%</span>{% endif %}
+            </span>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+
+{# ------------------------------------- FUNNEL + PERFORMANCE + FORECAST #}
+<div class="r-grid r-grid-2-1-1">
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v7l-4 2v-9z"/></svg></span>
+            <span><div class="r-panel-title">Lead to Booking Conversion</div>
+                  <div class="r-panel-sub">Where leads drop off in the pipeline</div></span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-funnel">
+                {% for f in funnel %}
+                <div class="r-funnel-row">
+                    <span class="r-funnel-label">{{ f.label }}</span>
+                    <span class="r-funnel-bar-wrap">
+                        <span class="r-funnel-bar" style="width:{{ f.width }}%;"></span>
+                    </span>
+                    <span class="r-funnel-meta">
+                        <div class="n">{{ f.count }}</div>
+                        <div class="p">{{ f.pct }}%</div>
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7"/><rect x="13" y="7" width="3" height="11"/></svg></span>
+            <span><div class="r-panel-title">Sales Performance</div>
+                  <div class="r-panel-sub">Revenue bars, bookings line</div></span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-chart-wrap"><canvas id="perfChart"></canvas></div>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 4.6L18.5 9l-4.6 1.4L12 15l-1.9-4.6L5.5 9l4.6-1.4z"/></svg></span>
+            <span><div class="r-panel-title">AI Forecast</div>
+                  <div class="r-panel-sub">Next 30 days, weighted 3-month trend</div></span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-forecast-grid">
+                <div class="r-forecast-cell">
+                    <div class="k">Expected revenue</div>
+                    <div class="v">{{ forecast_revenue }}</div>
+                    <div class="r-kpi-delta">
+                        {% if forecast_rev_delta >= 0 %}<span class="up">&#9650; {{ forecast_rev_delta }}%</span>
+                        {% else %}<span class="down">&#9660; {{ forecast_rev_delta }}%</span>{% endif %}
+                    </div>
+                </div>
+                <div class="r-forecast-cell">
+                    <div class="k">Expected bookings</div>
+                    <div class="v">{{ forecast_bookings }}</div>
+                    <div class="r-kpi-delta">
+                        {% if forecast_bk_delta >= 0 %}<span class="up">&#9650; {{ forecast_bk_delta }}%</span>
+                        {% else %}<span class="down">&#9660; {{ forecast_bk_delta }}%</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="r-insight">
+                <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></span>
+                <p>Forecast is a weighted average of your last three months. It updates automatically as bookings and payments are recorded &mdash; no manual input needed.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+{# ------------------------------------------------------- BREAKDOWNS #}
+<div class="r-grid r-grid-1-1-1">
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 4"/></svg></span>
+            <span><div class="r-panel-title">Leads by Source</div></span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-bars">
+                {% for r in source_rows %}
+                <div class="r-bar-row">
+                    <div class="r-bar-head">
+                        <span class="r-bar-name">{{ r.label }}</span>
+                        <span class="r-bar-val">{{ r.c }}</span>
+                    </div>
+                    <div class="r-bar-track"><div class="r-bar-fill" style="width:{{ r.width }}%;"></div></div>
+                </div>
+                {% empty %}
+                <div class="r-empty"><div class="t">No leads in this period</div>Pick a longer range to see source breakdown.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5 12 4l8 4.5V17l-8 4.5L4 17z"/><path d="M4 8.5 12 13l8-4.5M12 13v8.5"/></svg></span>
+            <span><div class="r-panel-title">Leads by Travel Type</div></span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-bars">
+                {% for r in trip_rows %}
+                <div class="r-bar-row">
+                    <div class="r-bar-head">
+                        <span class="r-bar-name">{{ r.label }}</span>
+                        <span class="r-bar-val">{{ r.c }}</span>
+                    </div>
+                    <div class="r-bar-track"><div class="r-bar-fill" style="width:{{ r.width }}%;"></div></div>
+                </div>
+                {% empty %}
+                <div class="r-empty"><div class="t">No travel type recorded</div>Set travel type on leads to compare Hajj vs Umrah demand.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <span><div class="r-panel-title">Top Destinations</div></span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-bars">
+                {% for r in dest_rows %}
+                <div class="r-bar-row">
+                    <div class="r-bar-head">
+                        <span class="r-bar-name">{{ r.destination }}</span>
+                        <span class="r-bar-val">{{ r.c }}</span>
+                    </div>
+                    <div class="r-bar-track"><div class="r-bar-fill" style="width:{{ r.width }}%;"></div></div>
+                </div>
+                {% empty %}
+                <div class="r-empty"><div class="t">No destinations recorded</div>Add a destination on each lead to rank demand.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+
+{# --------------------------------------- SALES TEAM + PACKAGES #}
+<div class="r-grid r-grid-2-1">
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+            <span><div class="r-panel-title">Sales Team Performance</div></span>
+        </div>
+        <div class="r-table-wrap">
+            <table class="r-table">
+                <thead>
+                    <tr>
+                        <th>Salesperson</th><th>Leads</th><th>Positive</th>
+                        <th>Quotation</th><th>Converted</th><th>Lost</th><th>Conversion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in spo_rows %}
+                    <tr>
+                        <td class="r-cell-title">{{ s.name }}</td>
+                        <td>{{ s.total }}</td>
+                        <td>{{ s.positive }}</td>
+                        <td>{{ s.quotation }}</td>
+                        <td>{{ s.converted }}</td>
+                        <td>{{ s.lost }}</td>
+                        <td>
+                            <div class="r-score">
+                                <span class="r-score-bar"><span class="r-score-fill {% if s.rate >= 20 %}hi{% elif s.rate < 8 %}lo{% endif %}" style="width:{{ s.rate }}%;"></span></span>
+                                <span class="r-score-num">{{ s.rate }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7"><div class="r-empty"><div class="t">No salespeople added</div>Add your team to track individual performance.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></span>
+            <span><div class="r-panel-title">Package Performance</div></span>
+        </div>
+        <div class="r-table-wrap">
+            <table class="r-table">
+                <thead><tr><th>Package</th><th>Bookings</th><th>Pax</th><th>Received</th></tr></thead>
+                <tbody>
+                    {% for p in pkg_rows %}
+                    <tr>
+                        <td>
+                            <div class="r-cell-title">{{ p.package_name }}</div>
+                            <div class="r-cell-sub">{{ p.package_type|title }}</div>
+                        </td>
+                        <td>{{ p.c }}</td>
+                        <td>{{ p.pax|default:0 }}</td>
+                        <td>Rs {{ p.rev|default:0|floatformat:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4"><div class="r-empty"><div class="t">No packages booked yet</div>Named packages appear here once bookings are created.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+(function () {
+    if (typeof Chart === 'undefined') return;
+    Chart.defaults.font.family = "Inter, 'Segoe UI', Roboto, sans-serif";
+    Chart.defaults.font.size = 11.5;
+    Chart.defaults.color = '#7b7799';
+
+    var el = document.getElementById('perfChart');
+    if (!el) return;
+
+    new Chart(el, {
+        data: {
+            labels: {{ perf_labels|safe }},
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Revenue',
+                    data: {{ perf_revenue|safe }},
+                    backgroundColor: 'rgba(109,74,255,0.72)',
+                    borderRadius: 6,
+                    maxBarThickness: 30,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'line',
+                    label: 'Bookings',
+                    data: {{ perf_bookings|safe }},
+                    borderColor: '#f5a623',
+                    borderWidth: 2.4,
+                    tension: 0.35,
+                    pointRadius: 3.5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#f5a623',
+                    pointBorderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top', align: 'end',
+                    labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 7, padding: 14 }
+                },
+                tooltip: {
+                    backgroundColor: '#211d47', padding: 11, cornerRadius: 9,
+                    callbacks: {
+                        label: function (c) {
+                            if (c.dataset.label === 'Revenue') {
+                                var v = c.parsed.y;
+                                return ' Revenue: Rs ' + (v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : v.toLocaleString());
+                            }
+                            return ' Bookings: ' + c.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, border: { display: false } },
+                y: {
+                    beginAtZero: true, position: 'left',
+                    border: { display: false }, grid: { color: '#f0eff8' },
+                    ticks: {
+                        maxTicksLimit: 6,
+                        callback: function (v) {
+                            if (v >= 1e6) return (v / 1e6) + 'M';
+                            if (v >= 1e3) return (v / 1e3) + 'K';
+                            return v;
+                        }
+                    }
+                },
+                y1: {
+                    beginAtZero: true, position: 'right',
+                    border: { display: false }, grid: { display: false },
+                    ticks: { maxTicksLimit: 5, precision: 0 }
+                }
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

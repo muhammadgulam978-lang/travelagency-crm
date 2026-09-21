@@ -1,0 +1,39 @@
+{% extends 'leads/base.html' %}
+{% block title %}Transport — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>{{ schedule.get_transfer_type_display }}</h1>
+        <p>{{ schedule.pickup_location|default:"—" }} &rarr; {{ schedule.dropoff_location|default:"—" }} &middot; {{ schedule.scheduled_at|date:"j M Y, g:i A"|default:"Not scheduled" }}</p></div>
+    <div class="r-page-actions"><a href="{% url 'transport_edit' schedule.pk %}" class="r-btn ghost">Edit</a></div>
+</div>
+
+<section class="r-panel" style="margin-bottom:14px;">
+    <div class="r-panel-head"><span><div class="r-panel-title">Assign pilgrims</div>
+        <div class="r-panel-sub">{% if schedule.group %}Showing {{ schedule.group.name }} members{% elif schedule.booking %}Showing this booking's pilgrims{% else %}Showing all pilgrims{% endif %}</div></span></div>
+    <div class="r-panel-body">
+        <div class="r-assign-grid">
+            {% for p in candidates %}
+            <a class="r-assign-chip {% if p.pk in assigned_ids %}on{% endif %}" href="{% url 'transport_toggle_pilgrim' schedule.pk p.pk %}">
+                <span class="dot">{% if p.pk in assigned_ids %}&#10003;{% else %}+{% endif %}</span>{{ p.full_name }}
+            </a>
+            {% empty %}
+            <div class="r-empty"><div class="t">No pilgrims to assign</div>Link this transfer to a group or booking first.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="r-panel">
+    <div class="r-panel-head"><span><div class="r-panel-title">Vehicle &amp; driver</div></span></div>
+    <div class="r-panel-body">
+        <table class="r-table" style="margin:0 -18px;">
+            <tbody>
+                <tr><td>Vehicle</td><td class="r-cell-title">{{ schedule.vehicle|default:"—" }}</td></tr>
+                <tr><td>Driver</td><td class="r-cell-title">{{ schedule.driver_name|default:"—" }} {{ schedule.driver_phone }}</td></tr>
+                <tr><td>Cost</td><td class="r-cell-title">Rs {{ schedule.cost|floatformat:0 }}</td></tr>
+                <tr><td>Assigned</td><td class="r-cell-title">{% for p in assigned_pilgrims %}{{ p.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'leads/base.html' %}
+{% block title %}Groups — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Groups / Families</h1><p>Har family ya group ek hi record mein — rooms, flights aur documents saath.</p></div>
+    <div class="r-page-actions"><a href="{% url 'group_create' %}" class="r-btn">New group</a></div>
+</div>
+
+<form method="get" class="r-filters">
+    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search group name or ID…">
+    <select name="trip">
+        <option value="">All trip types</option>
+        {% for c,l in trip_choices %}<option value="{{ c }}" {% if request.GET.trip == c %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="r-btn">Apply</button>
+</form>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Group</th><th>Leader</th><th>Pilgrims</th><th>Trip</th><th>Departure</th><th>Visa approved</th><th>Docs complete</th></tr></thead>
+            <tbody>
+                {% for g in groups %}
+                <tr>
+                    <td><a href="{% url 'group_detail' g.pk %}" class="r-cell-title">{{ g.name }}</a><div class="r-cell-sub">{{ g.group_id }}</div></td>
+                    <td>{{ g.leader.full_name|default:"—" }}</td>
+                    <td>{{ g.total_pilgrims }}</td>
+                    <td>{{ g.get_trip_type_display }}</td>
+                    <td>{{ g.departure_date|date:"j M Y"|default:"—" }}</td>
+                    <td>{{ g.visa_approved_count }} / {{ g.total_pilgrims }}</td>
+                    <td>{{ g.documents_complete_count }} / {{ g.total_pilgrims }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="r-empty"><div class="t">No groups yet</div>Create a group, then assign pilgrims to it.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

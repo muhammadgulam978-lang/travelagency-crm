@@ -1,0 +1,597 @@
+{% extends 'leads/base.html' %}
+{% block title %}New Booking - Lead CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">New Booking</h1>
+    <a href="{% url 'booking_list' %}" class="btn" style="background:#202954; box-shadow:none;">Back</a>
+</div>
+
+<form method="post" id="bookingForm">
+    {% csrf_token %}
+
+    <div class="card booking-summary-bar">
+        <div><span>Persons:</span> <strong id="sumPersons">1</strong></div>
+        <div><span>Adult Costing:</span> <strong id="sumCosting">0.00</strong></div>
+        <div><span>Visa:</span> <strong id="sumVisa">0.00</strong></div>
+        <div><span>Flight:</span> <strong id="sumFlight">0.00</strong></div>
+        <div><span>Total:</span> <strong id="sumTotal" style="color:var(--green);">0.00</strong></div>
+        <div><span>Balance:</span> <strong id="sumBalance" style="color:var(--red);">0.00</strong></div>
+    </div>
+
+    <div class="card" style="padding:0;">
+        <div class="booking-tabs" id="bookingTabs">
+            <button type="button" class="tab-btn active" data-tab="package">&#127991; Package</button>
+            <button type="button" class="tab-btn" data-tab="details">&#128100; Booking Details</button>
+            <button type="button" class="tab-btn" data-tab="persons">&#128101; Persons</button>
+            <button type="button" class="tab-btn" data-tab="flight">&#9992; Flight</button>
+            <button type="button" class="tab-btn" data-tab="hotel">&#127976; Hotel</button>
+            <button type="button" class="tab-btn" data-tab="transport">&#128652; Transport</button>
+            <button type="button" class="tab-btn" data-tab="visa">&#128209; Visa</button>
+            <button type="button" class="tab-btn" data-tab="costing">&#128179; Costing</button>
+        </div>
+
+        <div class="tab-panel-wrap">
+
+            <!-- PACKAGE TAB -->
+            <div class="tab-panel active" data-panel="package">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Package Type *</label>
+                        <select name="package_type" class="form-control" required>
+                            <option value="umrah">Umrah</option>
+                            <option value="hajj">Hajj</option>
+                            <option value="tour">Tour</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Year *</label>
+                        <input type="number" name="year" class="form-control" value="{{ current_year }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Package Name</label>
+                        <input type="text" name="package_name" class="form-control" placeholder="e.g. Economy Umrah 2026">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Booking Status</label>
+                        <select name="booking_status" class="form-control">
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="tab-nav-actions">
+                    <span></span>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- BOOKING DETAILS TAB -->
+            <div class="tab-panel" data-panel="details">
+                <div class="form-group">
+                    <label class="field-label">Booking For *</label>
+                    <div style="display:flex; gap:24px; margin-top:6px;">
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="booking_for" value="client" checked onchange="toggleBookingFor()"> Client</label>
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="booking_for" value="company" onchange="toggleBookingFor()"> Company</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" id="clientFieldWrap">
+                        <label class="field-label">Client *</label>
+                        <select name="client" id="clientSelect" class="form-control" onchange="autofillClient()">
+                            <option value="">-- Select Client --</option>
+                            {% for c in contacts %}
+                            <option value="{{ c.pk }}" data-phone="{{ c.phone|default:'' }}">{{ c.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" id="companyFieldWrap" style="display:none;">
+                        <label class="field-label">Company *</label>
+                        <select name="company" class="form-control">
+                            <option value="">-- Select Company --</option>
+                            {% for co in companies %}
+                            <option value="{{ co.pk }}">{{ co.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">No of Pax *</label>
+                        <input type="number" name="no_of_pax" id="noOfPax" class="form-control" value="1" min="1" required onchange="updatePersonRows(); recalcSummary();">
+                        <div class="row-subtext">Persons, Flight &amp; Visa tabs will update automatically</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Care Of</label>
+                        <input type="text" name="care_of" class="form-control" placeholder="Guardian / Agent">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Passport Number</label>
+                        <input type="text" name="passport_number" class="form-control" placeholder="Auto-filled from client">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">CNIC Number</label>
+                        <input type="text" name="cnic_number" class="form-control" placeholder="Auto-filled from client">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Phone Number</label>
+                        <input type="text" name="phone_number" id="phoneNumberField" class="form-control" placeholder="Auto-filled from client">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Emergency Phone</label>
+                        <input type="text" name="emergency_phone" class="form-control" placeholder="+92 300 0000000">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Voucher Number</label>
+                        <input type="text" name="voucher_number" class="form-control" placeholder="VCH-XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Card Number</label>
+                        <input type="text" name="card_number" class="form-control">
+                    </div>
+                </div>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#202954; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- PERSONS TAB -->
+            <div class="tab-panel" data-panel="persons">
+                <div id="personsWrap"></div>
+                <button type="button" class="btn-add-row" onclick="addPersonRow()">+ Add Person</button>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#202954; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- FLIGHT TAB -->
+            <div class="tab-panel" data-panel="flight">
+                <h3 class="dynamic-row-header">Departure Info</h3>
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Date of Departure</label><input type="date" name="departure_date" class="form-control"></div>
+                    <div class="form-group"><label class="field-label">Departure Flight #</label><input type="text" name="departure_flight_no" class="form-control" placeholder="PK-301"></div>
+                    <div class="form-group"><label class="field-label">Time of Departure</label><input type="time" name="departure_time" class="form-control"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Airline</label>
+                        <select name="departure_airline" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option>PIA</option><option>Saudia</option><option>Airblue</option><option>Flynas</option><option>Emirates</option><option>Qatar Airways</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="field-label">Departure PNR / Ticket #</label><input type="text" name="departure_pnr" class="form-control" placeholder="ABC123"></div>
+                </div>
+
+                <h3 class="dynamic-row-header" style="margin-top:24px;">Arrival Info</h3>
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Date of Arrival</label><input type="date" name="arrival_date" class="form-control"></div>
+                    <div class="form-group"><label class="field-label">Arrival Flight #</label><input type="text" name="arrival_flight_no" class="form-control" placeholder="PK-302"></div>
+                    <div class="form-group"><label class="field-label">Time of Arrival</label><input type="time" name="arrival_time" class="form-control"></div>
+                    <div class="form-group">
+                        <label class="field-label">Airline</label>
+                        <select name="arrival_airline" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option>PIA</option><option>Saudia</option><option>Airblue</option><option>Flynas</option><option>Emirates</option><option>Qatar Airways</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Arrival PNR / Ticket #</label><input type="text" name="arrival_pnr" class="form-control" placeholder="XYZ456"></div>
+                </div>
+
+                <h3 class="dynamic-row-header" style="margin-top:24px;">Passenger Tickets <span class="row-subtext">(Auto-generated from No. of Pax)</span></h3>
+                <div id="ticketsWrap"></div>
+
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#202954; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- HOTEL TAB -->
+            <div class="tab-panel" data-panel="hotel">
+                <div id="hotelsWrap"></div>
+                <button type="button" class="btn-add-row" onclick="addHotelRow('')">+ Add Hotel</button>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#202954; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- TRANSPORT TAB -->
+            <div class="tab-panel" data-panel="transport">
+                <div id="routesWrap"></div>
+                <button type="button" class="btn-add-row" onclick="addRouteRow()">+ Add Route</button>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#202954; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- VISA TAB -->
+            <div class="tab-panel" data-panel="visa">
+                <p class="row-subtext">Names and passport numbers filled in Persons tab will auto-fill here. You can edit them.</p>
+                <div id="visasWrap"></div>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#202954; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- COSTING TAB -->
+            <div class="tab-panel" data-panel="costing">
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Package Cost (per person)</label><input type="number" step="0.01" name="package_cost_per_person" id="pkgCostInput" class="form-control" placeholder="Enter package cost" onchange="recalcSummary()"></div>
+                    <div class="form-group"><label class="field-label">Visa Charges (total)</label><input type="number" step="0.01" name="visa_charges_total" id="visaChargesInput" class="form-control" placeholder="Enter visa charges" onchange="recalcSummary()"></div>
+                    <div class="form-group"><label class="field-label">Flight Charges (total)</label><input type="number" step="0.01" name="flight_charges_total" id="flightChargesInput" class="form-control" placeholder="Enter flight charges" onchange="recalcSummary()"></div>
+                    <div class="form-group"><label class="field-label">Qurbani &amp; Other Charges</label><input type="number" step="0.01" name="other_charges" id="otherChargesInput" class="form-control" placeholder="Enter other charges" onchange="recalcSummary()"></div>
+                </div>
+
+                <table style="margin-bottom:24px;">
+                    <thead><tr><th>Persons</th><th>Pkg Cost &times; Pax</th><th>Visa</th><th>Flight</th><th>Other</th><th>Total</th></tr></thead>
+                    <tbody><tr>
+                        <td id="costPersons">1</td>
+                        <td id="costPkgTotal">0.00</td>
+                        <td id="costVisa">0.00</td>
+                        <td id="costFlight">0.00</td>
+                        <td id="costOther">0.00</td>
+                        <td style="color:var(--teal); font-weight:700;" id="costGrandTotal">0.00</td>
+                    </tr></tbody>
+                </table>
+
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Total Amount</label><input type="text" id="totalAmountDisplay" class="form-control" value="0.00" readonly></div>
+                    <div class="form-group"><label class="field-label">Total Received</label><input type="number" step="0.01" name="total_received" id="totalReceivedInput" class="form-control" placeholder="Enter amount received" onchange="recalcSummary()"></div>
+                    <div class="form-group"><label class="field-label">Balance Remaining</label><input type="text" id="balanceDisplay" class="form-control" value="0.00" readonly style="color:var(--red); font-weight:700;"></div>
+                </div>
+
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#202954; box-shadow:none;">&#8592; Prev</button>
+                    <button type="submit" class="btn">&#128190; Save Booking</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+<!-- Hidden templates for dynamic rows -->
+<template id="personRowTemplate">
+    <div class="dynamic-row person-row">
+        <div class="dynamic-row-header"><span class="person-row-title">Passenger</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove(); syncVisaFromPersons(); recalcSummary();">&times; Remove</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Full Name</label><input type="text" name="person_full_name[]" class="form-control person-name-input" placeholder="Full Name" oninput="syncVisaFromPersons()"></div>
+            <div class="form-group"><label class="field-label">Passport #</label><input type="text" name="person_passport[]" class="form-control person-passport-input" placeholder="Passport #" oninput="syncVisaFromPersons()"></div>
+            <div class="form-group"><label class="field-label">CNIC</label><input type="text" name="person_cnic[]" class="form-control" placeholder="XXXXX-XXXXXXX-X"></div>
+            <div class="form-group"><label class="field-label">Phone</label><input type="text" name="person_phone[]" class="form-control" placeholder="+92 300 0000000"></div>
+        </div>
+    </div>
+</template>
+
+<template id="ticketRowTemplate">
+    <div class="dynamic-row">
+        <div class="dynamic-row-header"><span class="ticket-row-title">Passenger</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Passenger Name</label><input type="text" name="ticket_passenger[]" class="form-control ticket-name-input" placeholder="Passenger Name"></div>
+            <div class="form-group"><label class="field-label">Passport #</label><input type="text" name="ticket_passport[]" class="form-control ticket-passport-input" placeholder="Passport #"></div>
+            <div class="form-group"><label class="field-label">Ticket / Seat #</label><input type="text" name="ticket_seat[]" class="form-control" placeholder="e.g. 24A"></div>
+        </div>
+    </div>
+</template>
+
+<template id="hotelRowTemplate">
+    <div class="dynamic-row">
+        <div class="dynamic-row-header"><span class="hotel-city-title">City</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">City</label><input type="text" name="hotel_city[]" class="form-control hotel-city-input" placeholder="Makkah / Madinah"></div>
+            <div class="form-group"><label class="field-label">Hotel Name</label><input type="text" name="hotel_name[]" class="form-control" placeholder="Hotel name"></div>
+            <div class="form-group"><label class="field-label">Nights</label><input type="number" name="hotel_nights[]" class="form-control" value="1" min="1"></div>
+            <div class="form-group">
+                <label class="field-label">Room Type</label>
+                <select name="hotel_room_type[]" class="form-control">
+                    <option value="single">Single</option><option value="double">Double</option><option value="triple">Triple</option><option value="quad">Quad</option><option value="sharing">Sharing</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">No. of Rooms</label><input type="number" name="hotel_rooms[]" class="form-control" value="1" min="1"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Check In</label><input type="date" name="hotel_checkin[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Check Out</label><input type="date" name="hotel_checkout[]" class="form-control"></div>
+        </div>
+    </div>
+</template>
+
+<template id="routeRowTemplate">
+    <div class="dynamic-row">
+        <div class="dynamic-row-header"><span>Route</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Route</label><input type="text" name="route_text[]" class="form-control" placeholder="Karachi &#8594; Makkah"></div>
+            <div class="form-group">
+                <label class="field-label">Transport Type</label>
+                <select name="route_type[]" class="form-control">
+                    <option value="private_car">Private Car</option><option value="coaster">Coaster</option><option value="bus">Bus</option><option value="van">Van</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">Notes</label><input type="text" name="route_notes[]" class="form-control" placeholder="Optional"></div>
+        </div>
+    </div>
+</template>
+
+<template id="visaRowTemplate">
+    <div class="dynamic-row visa-row">
+        <div class="dynamic-row-header"><span class="visa-row-title">Passenger</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Passport Number</label><input type="text" name="visa_passport[]" class="form-control visa-passport-input" placeholder="Passport #"></div>
+            <div class="form-group"><label class="field-label">Full Name</label><input type="text" name="visa_name[]" class="form-control visa-name-input" placeholder="Full Name"></div>
+            <div class="form-group"><label class="field-label">Date of Birth</label><input type="date" name="visa_dob[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Company</label><input type="text" name="visa_company[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="field-label">Send To</label>
+                <select name="visa_send_to[]" class="form-control">
+                    <option value="">-- Select --</option><option>Visa Agent 1</option><option>Visa Agent 2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Status</label>
+                <select name="visa_status[]" class="form-control">
+                    <option value="pending">Pending</option><option value="submitted">Submitted</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+.booking-summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 32px;
+    padding: 16px 26px;
+    font-size: 14px;
+    color: var(--text-muted);
+    align-items: center;
+}
+.booking-summary-bar strong { color: var(--text-dark); font-size: 15px; margin-left: 4px; }
+
+.booking-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: #f7f8fd;
+    border-radius: 12px 12px 0 0;
+    overflow-x: auto;
+}
+.tab-btn {
+    border: none;
+    background: transparent;
+    padding: 16px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--teal-dark); }
+.tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); background: #fff; }
+
+.tab-panel-wrap { padding: 28px 32px 32px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.tab-nav-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.dynamic-row {
+    background: #fafbfd;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+.dynamic-row-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal-dark);
+    margin: 0 0 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.remove-row-btn { color: var(--red); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.remove-row-btn:hover { text-decoration: underline; }
+
+.btn-add-row {
+    background: #eef1fe;
+    color: var(--teal-dark);
+    border: 1px solid #dbe1fb;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+.btn-add-row:hover { background: var(--teal); color: #fff; border-color: transparent; }
+
+@media (max-width: 700px) {
+    .booking-summary-bar { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .booking-tabs { flex-wrap: nowrap; }
+}
+</style>
+
+<script>
+(function() {
+    // ---- Tab switching ----
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.tab-panel');
+    const tabOrder = ['package', 'details', 'persons', 'flight', 'hotel', 'transport', 'visa', 'costing'];
+
+    function showTab(name) {
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+        panels.forEach(p => p.classList.toggle('active', p.dataset.panel === name));
+        window.scrollTo({ top: document.querySelector('.booking-tabs').offsetTop - 20, behavior: 'smooth' });
+    }
+    window.showTab = showTab;
+
+    tabBtns.forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
+
+    document.querySelectorAll('.tab-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const current = document.querySelector('.tab-panel.active').dataset.panel;
+            const idx = tabOrder.indexOf(current);
+            if (idx < tabOrder.length - 1) showTab(tabOrder[idx + 1]);
+        });
+    });
+    document.querySelectorAll('.tab-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const current = document.querySelector('.tab-panel.active').dataset.panel;
+            const idx = tabOrder.indexOf(current);
+            if (idx > 0) showTab(tabOrder[idx - 1]);
+        });
+    });
+
+    window.toggleBookingFor = function() {
+        const isCompany = document.querySelector('input[name="booking_for"]:checked').value === 'company';
+        document.getElementById('clientFieldWrap').style.display = isCompany ? 'none' : 'block';
+        document.getElementById('companyFieldWrap').style.display = isCompany ? 'block' : 'none';
+    };
+
+    window.autofillClient = function() {
+        const sel = document.getElementById('clientSelect');
+        const opt = sel.options[sel.selectedIndex];
+        document.getElementById('phoneNumberField').value = opt.getAttribute('data-phone') || '';
+    };
+
+    // ---- Persons ----
+    let personCount = 0;
+    window.addPersonRow = function(prefillName) {
+        personCount++;
+        const tpl = document.getElementById('personRowTemplate').content.cloneNode(true);
+        const titleEl = tpl.querySelector('.person-row-title');
+        titleEl.textContent = personCount === 1 ? 'Main Passenger (Client)' : 'Passenger ' + personCount;
+        if (prefillName) tpl.querySelector('.person-name-input').value = prefillName;
+        document.getElementById('personsWrap').appendChild(tpl);
+        syncTicketsFromPersons();
+        syncVisaFromPersons();
+        recalcSummary();
+    };
+
+    window.updatePersonRows = function() {
+        const target = parseInt(document.getElementById('noOfPax').value || '1', 10);
+        const wrap = document.getElementById('personsWrap');
+        const current = wrap.querySelectorAll('.person-row').length;
+        if (target > current) {
+            for (let i = current; i < target; i++) addPersonRow();
+        } else if (target < current) {
+            const rows = wrap.querySelectorAll('.person-row');
+            for (let i = current - 1; i >= target; i--) rows[i].remove();
+        }
+        syncTicketsFromPersons();
+        syncVisaFromPersons();
+    };
+
+    // ---- Tickets (mirrors persons) ----
+    window.syncTicketsFromPersons = function() {
+        const names = Array.from(document.querySelectorAll('.person-name-input')).map(i => i.value);
+        const passports = Array.from(document.querySelectorAll('.person-passport-input')).map(i => i.value);
+        const wrap = document.getElementById('ticketsWrap');
+        wrap.innerHTML = '';
+        names.forEach((name, i) => {
+            const tpl = document.getElementById('ticketRowTemplate').content.cloneNode(true);
+            tpl.querySelector('.ticket-row-title').textContent = 'Passenger ' + (i + 1) + (name ? ': ' + name : '');
+            tpl.querySelector('.ticket-name-input').value = name || ('Passenger ' + (i + 1));
+            tpl.querySelector('.ticket-passport-input').value = passports[i] || '';
+            wrap.appendChild(tpl);
+        });
+    };
+
+    // ---- Visa (mirrors persons) ----
+    window.syncVisaFromPersons = function() {
+        const names = Array.from(document.querySelectorAll('.person-name-input')).map(i => i.value);
+        const passports = Array.from(document.querySelectorAll('.person-passport-input')).map(i => i.value);
+        const wrap = document.getElementById('visasWrap');
+        wrap.innerHTML = '';
+        names.forEach((name, i) => {
+            const tpl = document.getElementById('visaRowTemplate').content.cloneNode(true);
+            tpl.querySelector('.visa-row-title').textContent = 'Visa ' + (i + 1) + ': ' + (name || 'Passenger ' + (i + 1));
+            tpl.querySelector('.visa-name-input').value = name || '';
+            tpl.querySelector('.visa-passport-input').value = passports[i] || '';
+            wrap.appendChild(tpl);
+        });
+    };
+
+    // ---- Hotels ----
+    window.addHotelRow = function(cityDefault) {
+        const tpl = document.getElementById('hotelRowTemplate').content.cloneNode(true);
+        if (cityDefault) {
+            tpl.querySelector('.hotel-city-input').value = cityDefault;
+            tpl.querySelector('.hotel-city-title').textContent = cityDefault;
+        }
+        document.getElementById('hotelsWrap').appendChild(tpl);
+    };
+
+    // ---- Transport routes ----
+    window.addRouteRow = function() {
+        const tpl = document.getElementById('routeRowTemplate').content.cloneNode(true);
+        document.getElementById('routesWrap').appendChild(tpl);
+    };
+
+    // ---- Live summary + costing calculations ----
+    window.recalcSummary = function() {
+        const pax = parseInt(document.getElementById('noOfPax').value || '1', 10);
+        const pkgCost = parseFloat(document.getElementById('pkgCostInput').value || '0');
+        const visaCharges = parseFloat(document.getElementById('visaChargesInput').value || '0');
+        const flightCharges = parseFloat(document.getElementById('flightChargesInput').value || '0');
+        const otherCharges = parseFloat(document.getElementById('otherChargesInput').value || '0');
+        const received = parseFloat(document.getElementById('totalReceivedInput').value || '0');
+
+        const pkgTotal = pkgCost * pax;
+        const grandTotal = pkgTotal + visaCharges + flightCharges + otherCharges;
+        const balance = grandTotal - received;
+
+        document.getElementById('sumPersons').textContent = pax;
+        document.getElementById('sumCosting').textContent = pkgCost.toFixed(2);
+        document.getElementById('sumVisa').textContent = visaCharges.toFixed(2);
+        document.getElementById('sumFlight').textContent = flightCharges.toFixed(2);
+        document.getElementById('sumTotal').textContent = grandTotal.toFixed(2);
+        document.getElementById('sumBalance').textContent = balance.toFixed(2);
+
+        document.getElementById('costPersons').textContent = pax;
+        document.getElementById('costPkgTotal').textContent = pkgTotal.toFixed(2);
+        document.getElementById('costVisa').textContent = visaCharges.toFixed(2);
+        document.getElementById('costFlight').textContent = flightCharges.toFixed(2);
+        document.getElementById('costOther').textContent = otherCharges.toFixed(2);
+        document.getElementById('costGrandTotal').textContent = grandTotal.toFixed(2);
+
+        document.getElementById('totalAmountDisplay').value = grandTotal.toFixed(2);
+        document.getElementById('balanceDisplay').value = balance.toFixed(2);
+    };
+
+    // ---- Init ----
+    addPersonRow('');
+    addHotelRow('Makkah');
+    addHotelRow('Madinah');
+    addRouteRow();
+    recalcSummary();
+})();
+</script>
+{% endblock %}

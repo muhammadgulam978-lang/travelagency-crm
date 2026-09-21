@@ -1,0 +1,152 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ pilgrim.full_name }} — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div>
+        <h1>{{ pilgrim.full_name }}</h1>
+        <p>{{ pilgrim.pilgrim_id }} &middot; {{ pilgrim.get_trip_type_display }} &middot; {{ pilgrim.get_status_display }}</p>
+    </div>
+    <div class="r-page-actions">
+        <a href="{% url 'pilgrim_edit' pilgrim.pk %}" class="r-btn ghost">Edit profile</a>
+        {% if pilgrim.group %}<a href="{% url 'group_detail' pilgrim.group.pk %}" class="r-btn ghost">Open group</a>{% endif %}
+    </div>
+</div>
+
+{% if pilgrim.passport_alert %}
+<section class="r-panel" style="margin-bottom:14px;">
+    <div class="r-panel-body" style="padding-top:16px;">
+        {% if pilgrim.passport_alert == 'expired' %}
+        <span class="r-alert danger">Passport expired {{ pilgrim.passport_days_left|cut:"-" }} days ago — renew before applying for a visa.</span>
+        {% else %}
+        <span class="r-alert warn">Passport expires in {{ pilgrim.passport_days_left }} days. Saudi visa rules usually need 6 months validity.</span>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<div class="r-grid r-grid-1-1-1">
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Personal information</div></span></div>
+        <div class="r-panel-body">
+            <table class="r-table" style="margin:0 -18px;">
+                <tbody>
+                    <tr><td>Father / husband</td><td class="r-cell-title">{{ pilgrim.father_husband_name|default:"—" }}</td></tr>
+                    <tr><td>Date of birth</td><td class="r-cell-title">{{ pilgrim.date_of_birth|date:"j M Y"|default:"—" }}{% if pilgrim.age %} ({{ pilgrim.age }}){% endif %}</td></tr>
+                    <tr><td>Gender</td><td class="r-cell-title">{{ pilgrim.get_gender_display }}</td></tr>
+                    <tr><td>Nationality</td><td class="r-cell-title">{{ pilgrim.nationality }}</td></tr>
+                    <tr><td>Blood group</td><td class="r-cell-title">{{ pilgrim.get_blood_group_display|default:"—" }}</td></tr>
+                    <tr><td>CNIC</td><td class="r-cell-title">{{ pilgrim.cnic|default:"—" }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Travel &amp; contact</div></span></div>
+        <div class="r-panel-body">
+            <table class="r-table" style="margin:0 -18px;">
+                <tbody>
+                    <tr><td>Passport</td><td class="r-cell-title">{{ pilgrim.passport_number|default:"—" }}</td></tr>
+                    <tr><td>Passport expiry</td><td class="r-cell-title">{{ pilgrim.passport_expiry|date:"j M Y"|default:"—" }}</td></tr>
+                    <tr><td>Visa status</td><td class="r-cell-title">{{ pilgrim.get_visa_status_display }}</td></tr>
+                    <tr><td>Phone</td><td class="r-cell-title">{{ pilgrim.phone|default:"—" }}</td></tr>
+                    <tr><td>Emergency</td><td class="r-cell-title">{{ pilgrim.emergency_contact_name|default:"—" }} {{ pilgrim.emergency_contact_phone }}</td></tr>
+                    <tr><td>Room / flight / seat</td><td class="r-cell-title">{{ pilgrim.room_number|default:"—" }} / {{ pilgrim.flight_number|default:"—" }} / {{ pilgrim.seat_number|default:"—" }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Add or update a document</div></span></div>
+        <div class="r-panel-body">
+            <form method="post" enctype="multipart/form-data" action="{% url 'pilgrim_document_save' pilgrim.pk %}">
+                {% csrf_token %}
+                {{ doc_form.as_p }}
+                <button type="submit" class="r-btn">Save document</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<section class="r-panel">
+    <div class="r-panel-head"><span><div class="r-panel-title">Documents</div>
+        <div class="r-panel-sub">Expiry alerts fire automatically at 6 months.</div></span></div>
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Document</th><th>Status</th><th>Number</th><th>Expiry</th><th>File</th></tr></thead>
+            <tbody>
+                {% for row in doc_rows %}
+                <tr>
+                    <td class="r-cell-title">{{ row.label }}</td>
+                    <td>
+                        {% if row.doc %}<span class="r-stage stage-{% if row.doc.status == 'approved' %}converted{% elif row.doc.status == 'rejected' %}lost{% else %}new{% endif %}">{{ row.doc.get_status_display }}</span>
+                        {% else %}<span class="r-stage stage-lost">Not Uploaded</span>{% endif %}
+                    </td>
+                    <td>{{ row.doc.document_number|default:"—" }}</td>
+                    <td>
+                        {% if row.doc and row.doc.expiry_date %}
+                            {{ row.doc.expiry_date|date:"j M Y" }}
+                            {% if row.doc.is_expired %}<div><span class="r-alert danger">Expired</span></div>
+                            {% elif row.doc.is_expiring %}<div><span class="r-alert warn">{{ row.doc.days_to_expiry }} days left</span></div>{% endif %}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>{% if row.doc and row.doc.file %}<a href="{{ row.doc.file.url }}" target="_blank" rel="noopener">Open</a>{% else %}—{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="r-grid r-grid-1-1-1" style="margin-top:14px;">
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Flights</div></span></div>
+        <div class="r-list">
+            {% for fa in pilgrim.flight_assignments.all %}
+            <div class="r-list-row">
+                <span class="r-list-main">
+                    <a class="r-list-title" href="{% url 'flight_detail' fa.flight.pk %}">{{ fa.flight.airline }} {{ fa.flight.flight_no }}</a>
+                    <span class="r-list-sub">{{ fa.flight.get_leg_display }}{% if fa.seat_number %} &middot; Seat {{ fa.seat_number }}{% endif %}</span>
+                </span>
+            </div>
+            {% empty %}
+            <div class="r-empty"><div class="t">No flight assigned</div></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Transport</div></span></div>
+        <div class="r-list">
+            {% for t in pilgrim.transport_assignments.all %}
+            <div class="r-list-row">
+                <span class="r-list-main">
+                    <a class="r-list-title" href="{% url 'transport_detail' t.pk %}">{{ t.get_transfer_type_display }}</a>
+                    <span class="r-list-sub">{{ t.pickup_location|default:"—" }} &rarr; {{ t.dropoff_location|default:"—" }}</span>
+                </span>
+            </div>
+            {% empty %}
+            <div class="r-empty"><div class="t">No transport assigned</div></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Ziyarat / Activities</div></span></div>
+        <div class="r-list">
+            {% for zp in pilgrim.ziyarat_participations.all %}
+            <div class="r-list-row">
+                <span class="r-list-main">
+                    <a class="r-list-title" href="{% url 'ziyarat_detail' zp.activity.pk %}">{{ zp.activity.name }}</a>
+                    <span class="r-list-sub">{{ zp.activity.date|date:"j M Y"|default:"—" }}</span>
+                </span>
+                {% if zp.attended %}<span class="r-alert ok">Attended</span>{% else %}<span class="r-alert warn">Pending</span>{% endif %}
+            </div>
+            {% empty %}
+            <div class="r-empty"><div class="t">No activities assigned</div></div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

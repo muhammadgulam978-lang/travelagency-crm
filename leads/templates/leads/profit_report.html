@@ -1,0 +1,48 @@
+{% extends 'leads/base.html' %}
+{% block title %}Profit &amp; Cost — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Profit &amp; Cost</h1>
+        <p>Supplier cost vs selling price per booking.{% if missing_costs %} {{ missing_costs }} booking{{ missing_costs|pluralize }} still need a cost breakdown.{% endif %}</p></div>
+</div>
+
+<div class="r-kpi-grid">
+    <div class="r-kpi"><span class="r-kpi-icon tone-sky"></span><span class="r-kpi-body">
+        <span class="r-kpi-label">Selling price</span><span class="r-kpi-value">Rs {{ total_selling|floatformat:0 }}</span></span></div>
+    <div class="r-kpi"><span class="r-kpi-icon tone-amber"></span><span class="r-kpi-body">
+        <span class="r-kpi-label">Supplier cost</span><span class="r-kpi-value">Rs {{ total_cost|floatformat:0 }}</span></span></div>
+    <div class="r-kpi"><span class="r-kpi-icon tone-emerald"></span><span class="r-kpi-body">
+        <span class="r-kpi-label">Gross profit</span><span class="r-kpi-value">Rs {{ total_profit|floatformat:0 }}</span></span></div>
+    <div class="r-kpi"><span class="r-kpi-icon tone-violet"></span><span class="r-kpi-body">
+        <span class="r-kpi-label">Margin</span><span class="r-kpi-value">{{ total_margin }}%</span></span></div>
+</div>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Booking</th><th>Client</th><th>Selling</th><th>Cost</th><th>Gross profit</th><th>Margin</th><th></th></tr></thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td><span class="r-cell-title">{{ r.booking.package_name|default:r.booking.get_package_type_display }}</span>
+                        <div class="r-cell-sub">{{ r.booking.no_of_pax }} pax &middot; {{ r.booking.get_booking_status_display }}</div></td>
+                    <td>{{ r.booking.client_or_company_name }}</td>
+                    <td>Rs {{ r.selling|floatformat:0 }}</td>
+                    <td>{% if r.has_cost %}Rs {{ r.cost|floatformat:0 }}{% else %}<span style="color:var(--r-faint);">Not entered</span>{% endif %}</td>
+                    <td><span class="r-profit {% if r.profit >= 0 %}pos{% else %}neg{% endif %}"><span class="v">Rs {{ r.profit|floatformat:0 }}</span></span></td>
+                    <td>
+                        <div class="r-score">
+                            <span class="r-score-bar"><span class="r-score-fill {% if r.margin >= 15 %}hi{% elif r.margin < 5 %}lo{% endif %}" style="width:{{ r.margin }}%;"></span></span>
+                            <span class="r-score-num">{{ r.margin }}%</span>
+                        </div>
+                    </td>
+                    <td><div class="r-row-actions"><a href="{% url 'booking_cost_edit' r.booking.pk %}">{% if r.has_cost %}Edit cost{% else %}Add cost{% endif %}</a></div></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="r-empty"><div class="t">No active bookings</div>Create a booking, then enter its supplier costs to see real margin.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

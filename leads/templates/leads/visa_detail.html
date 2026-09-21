@@ -1,0 +1,84 @@
+{% extends 'leads/base.html' %}
+{% load custom_filters %}
+{% block title %}{{ application.applicant_name }} - Visa Application{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 class="page-title" style="margin:0;">{{ application.applicant_name }}</h1>
+    <div class="action-links">
+        <a href="{% url 'visa_list' %}">&larr; Back to list</a>
+        {% if request.user|has_full_access:'visa' %}
+        <a href="{% url 'visa_edit' application.pk %}" class="btn btn-small">Edit</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="form-row">
+        <div><strong>Country:</strong> {{ application.country }}</div>
+        <div><strong>Category:</strong> {{ application.get_visa_category_display }}</div>
+        <div><strong>Passport #:</strong> {{ application.passport_number|default:"-" }}</div>
+    </div>
+    <div class="form-row" style="margin-top:12px;">
+        <div><strong>Status:</strong>
+            <span class="pill
+                {% if application.status == 'approved' or application.status == 'completed' %}pill-converted
+                {% elif application.status == 'rejected' %}pill-lost
+                {% elif application.status == 'submitted' or application.status == 'processing' or application.status == 'appointment' %}pill-positive
+                {% else %}pill-new{% endif %}">
+                {{ application.get_status_display }}
+            </span>
+        </div>
+        <div><strong>Assigned Agent:</strong> {{ application.assigned_agent.username|default:"Unassigned" }}</div>
+        <div><strong>Linked Lead:</strong>
+            {% if application.lead %}<a href="{% url 'lead_detail' application.lead.pk %}">{{ application.lead.name }}</a>{% else %}-{% endif %}
+        </div>
+    </div>
+    <div class="form-row" style="margin-top:12px;">
+        <div><strong>Embassy Fee:</strong> {{ application.embassy_fee }}</div>
+        <div><strong>Service Fee:</strong> {{ application.service_fee }}</div>
+        <div><strong>Total Fee:</strong> {{ application.embassy_fee|add:application.service_fee }}</div>
+    </div>
+    <div class="form-row" style="margin-top:12px;">
+        <div><strong>Appointment:</strong> {{ application.appointment_datetime|date:"d M Y, h:i A"|default:"-" }}</div>
+        <div><strong>Submitted:</strong> {{ application.submission_date|date:"d M Y"|default:"-" }}</div>
+        <div><strong>Expected Decision:</strong> {{ application.expected_decision_date|date:"d M Y"|default:"-" }}</div>
+    </div>
+    {% if application.notes %}
+    <div style="margin-top:16px;"><strong>Notes:</strong><p>{{ application.notes }}</p></div>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top:20px;">
+    <h3 style="margin-top:0;">Document Checklist</h3>
+    <table>
+        <thead><tr><th>Document</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for item in checklist_items %}
+            <tr>
+                <td>{{ item.document_name }}</td>
+                <td>
+                    <span class="pill {% if item.status == 'received' %}pill-converted{% elif item.status == 'not_applicable' %}pill-lost{% else %}pill-new{% endif %}">
+                        {{ item.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if request.user|has_full_access:'visa' %}
+                    <form method="post" action="{% url 'visa_checklist_update' application.pk item.pk %}" style="display:inline-flex; gap:6px;">
+                        {% csrf_token %}
+                        <select name="status" class="form-control" style="max-width:160px;">
+                            {% for value, label in doc_status_choices %}
+                            <option value="{{ value }}" {% if item.status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-small">Update</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3" class="empty-state">No checklist items.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

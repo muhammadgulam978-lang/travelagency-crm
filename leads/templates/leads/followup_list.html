@@ -1,0 +1,87 @@
+{% extends 'leads/base.html' %}
+{% load custom_filters %}
+{% block title %}{{ title }} — Raabta360{% endblock %}
+
+{% block content %}
+<div class="r-page-head">
+    <div>
+        <h1>{{ title }}</h1>
+        <p>Har follow-up local time (Asia/Karachi) ke hisaab se categorise hota hai.</p>
+    </div>
+    <div class="r-page-actions">
+        <a href="{% url 'all_leads' %}" class="r-btn ghost">Open leads</a>
+    </div>
+</div>
+
+<div class="r-tabs">
+    {% for t in scope_tabs %}
+    <a class="r-tab {% if current_scope == t.code %}active{% endif %}" href="{% url 'followup_list' t.code %}">
+        {{ t.label }}<span class="n">{{ t.count }}</span>
+    </a>
+    {% endfor %}
+</div>
+
+<form method="get" class="r-filters">
+    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search lead name, phone or note…">
+    <button type="submit" class="r-btn">Search</button>
+</form>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead>
+                <tr>
+                    <th>Lead</th>
+                    <th>Contact</th>
+                    <th>Scheduled for</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in followups %}
+                <tr>
+                    <td>
+                        <a href="{% url 'lead_detail' f.lead.pk %}" class="r-cell-title">{{ f.lead.name }}</a>
+                        <div class="r-cell-sub">{{ f.lead.get_trip_type_display|default:f.lead.destination|default:"Travel enquiry" }}</div>
+                    </td>
+                    <td>{{ f.lead.contact_number }}</td>
+                    <td>
+                        {{ f.local_dt|date:"j M Y" }}
+                        <div class="r-cell-sub">{{ f.local_dt|date:"g:i A" }}</div>
+                    </td>
+                    <td><span class="r-status fu-{{ f.status_class }}">{{ f.display_status }}</span></td>
+                    <td>{{ f.notes|default:"—"|truncatechars:60 }}</td>
+                    <td>
+                        <div class="r-row-actions">
+                            {% if f.lead.contact_number %}
+                            <a class="r-icon-btn" href="tel:{{ f.lead.contact_number }}" title="Call">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+                            </a>
+                            <a class="r-icon-btn wa" target="_blank" rel="noopener" title="WhatsApp"
+                               href="https://wa.me/{{ f.lead.contact_number|cut:'+'|cut:' '|cut:'-' }}">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2z"/></svg>
+                            </a>
+                            {% endif %}
+                            {% if f.status == 'pending' %}
+                            <a href="{% url 'followup_done' f.pk %}">Mark done</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="r-empty">
+                            <div class="t">Nothing in this list</div>
+                            Open a lead and schedule a follow-up — it will appear here under the right tab.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'leads/base.html' %}
+{% block title %}Cost breakdown — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Cost breakdown</h1>
+        <p>{{ booking.package_name|default:booking.get_package_type_display }} &middot; {{ booking.client_or_company_name }} &middot; selling Rs {{ booking.total_amount|floatformat:0 }}</p></div>
+</div>
+
+<div class="r-grid r-grid-2-1">
+    <section class="r-panel">
+        <div class="r-panel-body" style="padding-top:18px;">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div style="display:flex;gap:10px;margin-top:14px;">
+                    <button type="submit" class="r-btn">Save costs</button>
+                    <a href="{% url 'profit_report' %}" class="r-btn ghost">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Current margin</div></span></div>
+        <div class="r-panel-body">
+            <table class="r-table" style="margin:0 -18px;">
+                <tbody>
+                    <tr><td>Selling price</td><td class="r-cell-title">Rs {{ cost.selling_price|floatformat:0 }}</td></tr>
+                    <tr><td>Total cost</td><td class="r-cell-title">Rs {{ cost.total_cost|floatformat:0 }}</td></tr>
+                    <tr><td>Gross profit</td><td class="r-cell-title">Rs {{ cost.gross_profit|floatformat:0 }}</td></tr>
+                    <tr><td>Margin</td><td class="r-cell-title">{{ cost.margin_percent }}%</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

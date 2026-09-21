@@ -1,0 +1,19 @@
+{% extends 'leads/base.html' %}
+{% block title %}Receipt {{ txn.receipt_number }}{% endblock %}
+{% block content %}
+<div class="r-receipt">
+    <div class="r-receipt-head">
+        <div class="num">{{ txn.receipt_number }}</div>
+        <div style="color:var(--r-muted);font-size:12px;margin-top:4px;">Raabta360 — Hajj, Umrah &amp; Travel CRM</div>
+    </div>
+    <div class="r-receipt-row"><span class="k">Booking</span><span class="v">{{ booking.package_name|default:booking.get_package_type_display }}</span></div>
+    <div class="r-receipt-row"><span class="k">Client</span><span class="v">{{ booking.client_or_company_name }}</span></div>
+    <div class="r-receipt-row"><span class="k">Type</span><span class="v">{{ txn.get_transaction_type_display }}</span></div>
+    <div class="r-receipt-row"><span class="k">Method</span><span class="v">{{ txn.get_payment_method_display }}</span></div>
+    {% if txn.reference_number %}<div class="r-receipt-row"><span class="k">Reference</span><span class="v">{{ txn.reference_number }}</span></div>{% endif %}
+    <div class="r-receipt-row"><span class="k">Date</span><span class="v">{{ txn.transaction_date|date:"j M Y, g:i A" }}</span></div>
+    {% if txn.notes %}<div class="r-receipt-row"><span class="k">Notes</span><span class="v">{{ txn.notes }}</span></div>{% endif %}
+    <div class="r-receipt-total"><span>Amount</span><span>Rs {{ txn.amount|floatformat:0 }}</span></div>
+</div>
+<div style="text-align:center;margin-top:16px;"><button onclick="window.print()" class="r-btn ghost">Print</button></div>
+{% endblock %}

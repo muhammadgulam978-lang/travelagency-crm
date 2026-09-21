@@ -1,0 +1,347 @@
+{% extends 'leads/base.html' %}
+{% block title %}CEO Dashboard - Lead CRM{% endblock %}
+{% block content %}
+
+<div class="dash-head">
+    <div>
+        <h1 class="page-title" style="margin-bottom:4px;">CEO Dashboard</h1>
+        <p class="dash-subtitle">Revenue, pipeline health and team performance at a glance.</p>
+    </div>
+    <div class="live-pill"><span class="live-dot"></span> Live data · Updated now</div>
+</div>
+
+<!-- Revenue KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ total_revenue }}</div><div class="kpi-label">Total Revenue</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ this_month_revenue }}</div><div class="kpi-label">This Month Revenue</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ pipeline_value }}</div><div class="kpi-label">Pipeline Value</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ conversion_rate }}%</div><div class="kpi-label">Conversion Rate</div></div>
+    </div>
+</div>
+
+<!-- Activity Alerts -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon {% if meetings_today > 0 %}blue{% else %}teal{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ meetings_today }}</div><div class="kpi-label">Meetings Today</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon {% if followups_today > 0 %}orange{% else %}green{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ followups_today }}</div><div class="kpi-label">Followups Due Today</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon {% if tasks_overdue > 0 %}red{% else %}green{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ tasks_overdue }}</div><div class="kpi-label">Overdue Tasks</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon {% if tickets_open > 0 %}orange{% else %}green{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5z"/><path d="M13 5v3M13 11v2M13 16v3"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ tickets_open|default:0 }}</div><div class="kpi-label">Open Tickets</div></div>
+    </div>
+</div>
+
+<!-- Pipeline + Revenue split -->
+<div class="charts-row charts-row-even">
+    <div class="card chart-card">
+        <div class="chart-card-head">
+            <div>
+                <h2 class="section-heading" style="margin-bottom:2px;">Pipeline Summary</h2>
+                <p class="chart-card-sub">Leads by stage across the whole pipeline</p>
+            </div>
+        </div>
+        <div class="chart-canvas-wrap donut-wrap" id="pipelineChartWrap">
+            <canvas id="pipelineChart"></canvas>
+            <div class="donut-center-overlay">
+                <div class="donut-center-value">{{ total_leads }}</div>
+                <div class="donut-center-label">Total Leads</div>
+            </div>
+        </div>
+        <div class="donut-legend" id="pipelineLegend"></div>
+    </div>
+
+    <div class="card chart-card">
+        <div class="chart-card-head">
+            <div>
+                <h2 class="section-heading" style="margin-bottom:2px;">Revenue Breakdown</h2>
+                <p class="chart-card-sub">Advance vs full payments collected</p>
+            </div>
+        </div>
+        <div class="chart-canvas-wrap donut-wrap" id="revenueChartWrap">
+            <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="metric-strip" style="grid-template-columns:1fr 1fr;">
+            <div class="metric-tile">
+                <div class="metric-label">Advance</div>
+                <div class="metric-value">{{ advance_revenue }}</div>
+            </div>
+            <div class="metric-tile">
+                <div class="metric-label">Full</div>
+                <div class="metric-value">{{ full_revenue }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue by sales person -->
+<div class="card chart-card">
+    <div class="chart-card-head">
+        <div>
+            <h2 class="section-heading" style="margin-bottom:2px;">Revenue by Sales Person</h2>
+            <p class="chart-card-sub">Total revenue generated per team member</p>
+        </div>
+    </div>
+    <div class="chart-canvas-wrap chart-canvas-wrap-lg" id="spoRevenueWrap">
+        <canvas id="spoRevenueChart"></canvas>
+    </div>
+</div>
+
+<!-- AI Forecast -->
+<div class="card">
+    <div class="chart-card-head">
+        <div>
+            <h2 class="section-heading" style="margin-bottom:2px;">AI Revenue Forecast</h2>
+            <p class="chart-card-sub">Model-based projection for next month</p>
+        </div>
+        <a href="{% url 'sales_forecast' %}" class="btn btn-small">Full Forecast →</a>
+    </div>
+    {% if forecast.error %}
+    <div class="empty-state">{{ forecast.error }}</div>
+    {% else %}
+    <div class="metric-strip">
+        <div class="metric-tile">
+            <div class="metric-label">Predicted Next Month Revenue</div>
+            <div class="metric-value" style="color:var(--teal-dark);">{{ forecast.revenue_min }} – {{ forecast.revenue_max }}</div>
+        </div>
+        <div class="metric-tile">
+            <div class="metric-label">Expected Conversions</div>
+            <div class="metric-value">{{ forecast.expected_conversions }}</div>
+        </div>
+        <div class="metric-tile">
+            <div class="metric-label">Pipeline Health</div>
+            <div class="metric-value" style="color:{% if forecast.pipeline_health == 'Excellent' %}var(--green){% elif forecast.pipeline_health == 'Good' %}var(--teal){% elif forecast.pipeline_health == 'Fair' %}var(--orange){% else %}var(--red){% endif %};">{{ forecast.pipeline_health }}</div>
+        </div>
+    </div>
+    {% if forecast.summary %}
+    <p style="font-size:13.5px; color:var(--text-muted); margin:16px 0 0; line-height:1.6;">{{ forecast.summary }}</p>
+    {% endif %}
+    {% endif %}
+</div>
+
+<!-- Team Performance -->
+<div class="card">
+    <h2 class="section-heading">Team Performance</h2>
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>Sales Person</th>
+                <th>Total Leads</th>
+                <th>Converted</th>
+                <th>Conversion Rate</th>
+                <th>Revenue Generated</th>
+                <th>Performance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for spo in spo_performance %}
+            <tr>
+                <td><span class="spo-cell"><span class="spo-avatar">{{ spo.name|slice:":1"|upper }}</span><strong>{{ spo.name }}</strong></span></td>
+                <td>{{ spo.total }}</td>
+                <td style="color:var(--green); font-weight:700;">{{ spo.converted }}</td>
+                <td>{{ spo.rate }}%</td>
+                <td style="font-weight:700;">{{ spo.revenue }}</td>
+                <td style="min-width:130px;">
+                    <div class="progress-bar-wrap" style="height:8px;">
+                        <div class="progress-bar-fill done" style="width:{{ spo.rate }}%"></div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="empty-state">
+                    No sales persons yet. <a href="{% url 'salesperson_create' %}">Add one →</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- Top Scored Leads + High Churn Risk -->
+<div class="charts-row charts-row-even">
+    <div class="card">
+        <h2 class="section-heading">Top Scored Leads</h2>
+        <div class="table-scroll">
+        <table>
+            <thead><tr><th>Lead</th><th>Score</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for lead in top_leads %}
+                <tr>
+                    <td><a href="{% url 'lead_detail' lead.pk %}"><strong>{{ lead.name }}</strong></a></td>
+                    <td>
+                        <span style="font-weight:700;
+                            color:{% if lead.ai_score >= 80 %}var(--green){% elif lead.ai_score >= 60 %}var(--blue){% elif lead.ai_score >= 40 %}var(--orange){% else %}var(--red){% endif %};">
+                            {{ lead.ai_score }}/100
+                        </span>
+                    </td>
+                    <td><span class="pill pill-{{ lead.status }}">{{ lead.get_status_display }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="empty-state">No scored leads yet. <a href="{% url 'score_all_leads' %}">Score all →</a></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-heading">High Churn Risk</h2>
+        <div class="table-scroll">
+        <table>
+            <thead><tr><th>Lead</th><th>SPO</th><th>Risk</th></tr></thead>
+            <tbody>
+                {% for lead in high_churn_leads %}
+                <tr>
+                    <td><a href="{% url 'lead_detail' lead.pk %}"><strong>{{ lead.name }}</strong></a></td>
+                    <td>{{ lead.spo.name|default:"Unassigned" }}</td>
+                    <td><span class="pill pill-lost">High</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="empty-state">No high risk leads.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% if high_churn_leads %}
+        <div style="margin-top:14px;">
+            <a href="{% url 'churn_risk_all' %}" class="btn btn-small">View All Churn Risk →</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- AI Recommendations -->
+{% if forecast.recommendations %}
+<div class="card">
+    <h2 class="section-heading">AI Business Recommendations</h2>
+    {% for rec in forecast.recommendations %}
+    <div style="display:flex; gap:13px; align-items:flex-start; padding:13px 0; border-bottom:1px solid var(--border);">
+        <span style="background:var(--brand-grad); color:#fff; border-radius:50%; width:26px; height:26px;
+                     display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700; flex-shrink:0;">{{ forloop.counter }}</span>
+        <span style="font-size:14px; color:var(--text-dark); line-height:1.55;">{{ rec }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<script id="spoPerfData" type="application/json">[{% for s in spo_performance %}{"name": "{{ s.name|escapejs }}", "revenue": {{ s.revenue|default:0 }}, "rate": {{ s.rate|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+
+<script>
+(function () {
+    const P = { purple: '#6d4aff', purpleSoft: '#a78bfa', cyan: '#22b8cf', amber: '#f2a93b', red: '#f16063', green: '#1fb787', blue: '#4c6fff', violet: '#8b5cf6' };
+    const ICON_CHART = '<svg class="chart-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>';
+
+    function empty(id, msg) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="chart-empty">' + ICON_CHART + '<p>' + msg + '</p></div>';
+    }
+
+    if (!window.Chart) {
+        ['pipelineChartWrap', 'revenueChartWrap', 'spoRevenueWrap'].forEach(function (id) {
+            empty(id, 'Chart library could not load. Run "python manage.py collectstatic" and refresh.');
+        });
+        return;
+    }
+
+    Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#6b6785';
+    Chart.defaults.plugins.tooltip.backgroundColor = '#1e1b39';
+    Chart.defaults.plugins.tooltip.padding = 11;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.tooltip.boxPadding = 4;
+
+    /* ---- Pipeline doughnut ---- */
+    const pLabels = ['New', 'Positive', 'Quotation', 'Converted', 'Lost'];
+    const pData = [{{ new_leads }}, {{ positive_leads }}, {{ quotation_leads }}, {{ converted_leads }}, {{ lost_leads }}];
+    const pColors = [P.blue, P.violet, P.amber, P.green, P.red];
+    const pTotal = pData.reduce(function (a, b) { return a + b; }, 0);
+
+    if (pTotal > 0) {
+        new Chart(document.getElementById('pipelineChart'), {
+            type: 'doughnut',
+            data: { labels: pLabels, datasets: [{ data: pData, backgroundColor: pColors, borderWidth: 4, borderColor: '#fff', hoverOffset: 8 }] },
+            options: { cutout: '72%', maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+        document.getElementById('pipelineLegend').innerHTML = pLabels.map(function (l, i) {
+            const pct = ((pData[i] / pTotal) * 100).toFixed(1);
+            return '<div class="legend-row"><span class="legend-dot" style="background:' + pColors[i] + '"></span>' +
+                '<span class="legend-label">' + l + '</span><span class="legend-value">' + pData[i] + ' · ' + pct + '%</span></div>';
+        }).join('');
+    } else {
+        empty('pipelineChartWrap', 'No leads yet. Pipeline breakdown will appear here.');
+    }
+
+    /* ---- Revenue split doughnut ---- */
+    const advance = Number('{{ advance_revenue }}') || 0;
+    const full = Number('{{ full_revenue }}') || 0;
+
+    if (advance + full > 0) {
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Advance payments', 'Full payments'],
+                datasets: [{ data: [advance, full], backgroundColor: [P.purpleSoft, P.purple], borderWidth: 4, borderColor: '#fff', hoverOffset: 8 }]
+            },
+            options: {
+                cutout: '68%', maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 16, font: { weight: '600' } } } }
+            }
+        });
+    } else {
+        empty('revenueChartWrap', 'No payments recorded yet.');
+    }
+
+    /* ---- Revenue by sales person ---- */
+    let rows = [];
+    try { rows = JSON.parse(document.getElementById('spoPerfData').textContent) || []; } catch (e) { rows = []; }
+    const revTotal = rows.reduce(function (a, r) { return a + (r.revenue || 0); }, 0);
+
+    if (rows.length > 0 && revTotal > 0) {
+        new Chart(document.getElementById('spoRevenueChart'), {
+            type: 'bar',
+            data: {
+                labels: rows.map(function (r) { return r.name; }),
+                datasets: [{
+                    label: 'Revenue generated',
+                    data: rows.map(function (r) { return r.revenue; }),
+                    backgroundColor: P.purple, borderRadius: 8, borderSkipped: false, maxBarThickness: 40
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, border: { display: false }, grid: { color: '#f1eff9' }, ticks: { padding: 8 } },
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600' } } }
+                }
+            }
+        });
+    } else {
+        empty('spoRevenueWrap', 'No revenue recorded against sales persons yet.');
+    }
+})();
+</script>
+
+{% endblock %}

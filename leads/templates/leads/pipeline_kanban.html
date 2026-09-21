@@ -1,0 +1,45 @@
+{% extends 'leads/base.html' %}
+{% block title %}Pipeline — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Pipeline</h1><p>Har lead apni stage ke column mein, AI score ke hisaab se sorted.</p></div>
+    <div class="r-page-actions"><a href="{% url 'all_leads' %}" class="r-btn ghost">Table view</a></div>
+</div>
+
+<form method="get" class="r-filters">
+    <select name="trip">
+        <option value="">All travel types</option>
+        {% for c,l in trip_types %}<option value="{{ c }}" {% if request.GET.trip == c %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <select name="spo">
+        <option value="">All salespeople</option>
+        {% for s in spos %}<option value="{{ s.id }}" {% if request.GET.spo == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="r-btn">Apply</button>
+</form>
+
+<div class="r-kanban">
+    {% for col in columns %}
+    <div class="r-kan-col">
+        <div class="r-kan-head">{{ col.label }}<span class="n">{{ col.count }}</span></div>
+        <div class="r-kan-body">
+            {% for c in col.cards %}
+            <a class="r-kan-card" href="{% url 'lead_detail' c.lead.pk %}">
+                <span class="r-kan-name">{{ c.lead.name }}<span class="s">{{ c.lead.ai_score }}</span></span>
+                <div class="r-kan-meta">
+                    {{ c.lead.get_trip_type_display|default:"Travel" }}{% if c.lead.destination %} &middot; {{ c.lead.destination }}{% endif %}
+                    {% if c.lead.budget %}<div>Rs {{ c.lead.budget|floatformat:0 }}</div>{% endif %}
+                    {% if c.lead.travel_start_date %}<div>Travel {{ c.lead.travel_start_date|date:"j M" }} &middot; {{ c.lead.adults|add:c.lead.children }} pax</div>{% endif %}
+                </div>
+                {% if c.next_followup %}
+                <div class="r-kan-foot">Follow-up {{ c.next_followup|date:"j M, g:i A" }}</div>
+                {% endif %}
+            </a>
+            {% empty %}
+            <div class="r-kan-empty">Empty</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

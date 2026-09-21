@@ -1,0 +1,40 @@
+{% extends 'leads/base.html' %}
+{% block title %}Package Trash - Lead CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">Package Trash</h1>
+    <a href="{% url 'package_list' %}" class="btn">&#8592; Back to Packages</a>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>Package Name</th>
+                <th>Code</th>
+                <th>Year</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for package in packages %}
+            <tr>
+                <td>{{ package.package_name|default:"—" }}</td>
+                <td>{{ package.package_code|default:"—" }}</td>
+                <td>{{ package.year }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'package_restore' package.pk %}">Restore</a>
+                        <a href="{% url 'package_delete_permanent' package.pk %}" onclick="return confirm('Permanently delete this package? This cannot be undone.');">Delete Permanently</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty-state">Trash is empty.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

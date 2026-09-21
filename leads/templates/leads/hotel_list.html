@@ -1,0 +1,42 @@
+{% extends 'leads/base.html' %}
+{% block title %}Hotels - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 class="page-title" style="margin:0;">Hotels</h1>
+    <div class="action-links">
+        <a href="{% url 'hotel_reservation_list' %}" class="btn btn-small" style="background:#fff; color:var(--teal); border:1px solid var(--teal);">Reservations</a>
+        <a href="{% url 'hotel_create' %}" class="btn">+ Add Hotel</a>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th><th>City</th><th>Country</th><th>Star Rating</th><th>Contact</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in hotels %}
+            <tr>
+                <td>{{ h.name }}</td>
+                <td>{{ h.city }}</td>
+                <td>{{ h.country|default:"-" }}</td>
+                <td>{{ h.get_star_rating_display }}</td>
+                <td>{{ h.contact_person|default:"-" }} {% if h.phone %}· {{ h.phone }}{% endif %}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'hotel_edit' h.pk %}">Edit</a>
+                        <a href="{% url 'hotel_delete' h.pk %}" onclick="return confirm('Delete {{ h.name }}?')">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty-state">No hotels yet. Add your first hotel.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

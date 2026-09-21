@@ -1,0 +1,796 @@
+{% extends 'leads/base.html' %}
+{% block title %}{% if package %}Edit Package{% else %}New Package{% endif %} - Lead CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">Package / <strong>{% if package %}Edit{% else %}Create{% endif %}</strong></h1>
+    <a href="{% url 'package_list' %}" class="btn" style="background:#202954; box-shadow:none;">Back</a>
+</div>
+
+<style>
+.booking-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: #f7f8fd;
+    border-radius: 12px 12px 0 0;
+    overflow-x: auto;
+}
+.tab-btn {
+    border: none;
+    background: transparent;
+    padding: 16px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--teal-dark); }
+.tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); background: #fff; }
+
+.tab-panel-wrap { padding: 28px 32px 32px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.tab-nav-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.dynamic-row {
+    background: #fafbfd;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+.dynamic-row-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal-dark);
+    margin: 0 0 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.remove-row-btn { color: var(--red); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.remove-row-btn:hover { text-decoration: underline; }
+
+.btn-add-row {
+    background: #eef1fe;
+    color: var(--teal-dark);
+    border: 1px solid #dbe1fb;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+.btn-add-row:hover { background: var(--teal); color: #fff; border-color: transparent; }
+
+@media (max-width: 700px) {
+    .booking-tabs { flex-wrap: nowrap; }
+    .tab-panel-wrap { padding: 18px 16px 24px; }
+    .tab-btn { padding: 14px 14px; font-size: 13px; }
+    .form-row { grid-template-columns: 1fr !important; }
+    .tab-nav-actions { flex-wrap: wrap; gap: 10px; }
+    .tab-nav-actions .btn { flex: 1 1 auto; text-align: center; }
+}
+</style>
+
+<form method="post" id="packageForm" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="card" style="padding:0;">
+        <div class="booking-tabs" id="packageTabs">
+            <button type="button" class="tab-btn active" data-tab="package">Package</button>
+            <button type="button" class="tab-btn" data-tab="accommodation">Accommodation</button>
+            <button type="button" class="tab-btn" data-tab="transport">Transport</button>
+            <button type="button" class="tab-btn" data-tab="training">Training / Gifts</button>
+            <button type="button" class="tab-btn" data-tab="terms">Terms &amp; Condition</button>
+            <button type="button" class="tab-btn" data-tab="itinerary">Itinerary</button>
+            <button type="button" class="tab-btn" data-tab="maktab">Maktab Address</button>
+        </div>
+
+        <div class="tab-panel-wrap">
+
+            <!-- PACKAGE TAB -->
+            <div class="tab-panel active" data-panel="package">
+                <h3 class="dynamic-row-header">Package Details</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Company</label>
+                        <select name="company" class="form-control">
+                            <option value="">-- Select Company --</option>
+                            {% for c in companies %}
+                            <option value="{{ c.pk }}" {% if package.company_id == c.pk %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="field-label">Package #</label><input type="text" name="package_number" class="form-control" placeholder="e.g. PKG-001" value="{{ package.package_number|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Category</label><input type="text" name="category" class="form-control" placeholder="e.g. VIP" value="{{ package.category|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Zone</label><input type="text" name="zone" class="form-control" placeholder="e.g. Zone A" value="{{ package.zone|default:'' }}"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Package Name</label><input type="text" name="package_name" class="form-control" placeholder="e.g. Premium Hajj Package" value="{{ package.package_name|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Package Code</label><input type="text" name="package_code" class="form-control" placeholder="e.g. HJ-2027-01" value="{{ package.package_code|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Days</label><input type="number" name="days" class="form-control" placeholder="e.g. 21" value="{{ package.days|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Year</label><input type="number" name="year" class="form-control" value="{{ package.year|default:current_year }}"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Maktab</label><input type="text" name="maktab" class="form-control" placeholder="e.g. Maktab 5" value="{{ package.maktab|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Maktab Number</label><input type="text" name="maktab_number" class="form-control" placeholder="e.g. 105" value="{{ package.maktab_number|default:'' }}"></div>
+                    <div class="form-group">
+                        <label class="field-label">Medina Arrival</label>
+                        <div style="display:flex; gap:24px; margin-top:6px;">
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="medina_arrival" value="before_hajj" {% if not package or package.medina_arrival == 'before_hajj' %}checked{% endif %}> Before Hajj</label>
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="medina_arrival" value="after_hajj" {% if package.medina_arrival == 'after_hajj' %}checked{% endif %}> After Hajj</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Hajj Duration</label>
+                        <div style="display:flex; gap:24px; margin-top:6px;">
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="hajj_duration" value="short" {% if not package or package.hajj_duration == 'short' %}checked{% endif %}> Short</label>
+                            <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="hajj_duration" value="long" {% if package.hajj_duration == 'long' %}checked{% endif %}> Long</label>
+                        </div>
+                    </div>
+                    <div class="form-group"><label class="field-label">Hijri Start Day</label><input type="number" name="hijri_start_day" class="form-control" placeholder="e.g. 4" value="{{ package.hijri_start_day|default:'' }}"></div>
+                    <div class="form-group">
+                        <label class="field-label">Hijri Start Month</label>
+                        <select name="hijri_start_month" class="form-control">
+                            <option value="">-- Select --</option>
+                            {% for val, label in hijri_month_choices %}
+                            <option value="{{ val }}" {% if package.hijri_start_month == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <h3 class="dynamic-row-header" style="margin-top:24px;">Package Category</h3>
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Room Type</label><input type="text" name="room_type" class="form-control" placeholder="e.g. Standard" value="{{ package.room_type|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Azizia Room Type</label><input type="text" name="azizia_room_type" class="form-control" placeholder="e.g. Standard" value="{{ package.azizia_room_type|default:'' }}"></div>
+                    <div class="form-group">
+                        <label class="field-label">Makkah Type</label>
+                        <select name="makkah_type" class="form-control">
+                            <option value="">-- Select --</option>
+                            {% for val, label in room_sharing_choices %}
+                            <option value="{{ val }}" {% if package.makkah_type == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Medinah Type</label>
+                        <select name="medinah_type" class="form-control">
+                            <option value="">-- Select --</option>
+                            {% for val, label in room_sharing_choices %}
+                            <option value="{{ val }}" {% if package.medinah_type == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">Azizia Type</label>
+                        <select name="azizia_type" class="form-control">
+                            <option value="">-- Select --</option>
+                            {% for val, label in room_sharing_choices %}
+                            <option value="{{ val }}" {% if package.azizia_type == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="field-label">Mina Type</label><input type="text" name="mina_type" class="form-control" placeholder="e.g. Camp A" value="{{ package.mina_type|default:'' }}"></div>
+                </div>
+
+                <h3 class="dynamic-row-header" style="margin-top:24px;">Makkah / Madinah Sharing Breakdown</h3>
+                <div class="dynamic-row">
+                    <div class="dynamic-row-header">Makkah A</div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="field-label">Double</label><input type="number" name="makkah_a_double" class="form-control" value="{{ package.makkah_a_double|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Triple</label><input type="number" name="makkah_a_triple" class="form-control" value="{{ package.makkah_a_triple|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Quad</label><input type="number" name="makkah_a_quad" class="form-control" value="{{ package.makkah_a_quad|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Sharing</label><input type="number" name="makkah_a_sharing" class="form-control" value="{{ package.makkah_a_sharing|default:0 }}" placeholder="0"></div>
+                    </div>
+                </div>
+                <div class="dynamic-row">
+                    <div class="dynamic-row-header">Makkah B</div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="field-label">Double</label><input type="number" name="makkah_b_double" class="form-control" value="{{ package.makkah_b_double|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Triple</label><input type="number" name="makkah_b_triple" class="form-control" value="{{ package.makkah_b_triple|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Quad</label><input type="number" name="makkah_b_quad" class="form-control" value="{{ package.makkah_b_quad|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Sharing</label><input type="number" name="makkah_b_sharing" class="form-control" value="{{ package.makkah_b_sharing|default:0 }}" placeholder="0"></div>
+                    </div>
+                </div>
+                <div class="dynamic-row">
+                    <div class="dynamic-row-header">Madinah A</div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="field-label">Double</label><input type="number" name="madinah_a_double" class="form-control" value="{{ package.madinah_a_double|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Triple</label><input type="number" name="madinah_a_triple" class="form-control" value="{{ package.madinah_a_triple|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Quad</label><input type="number" name="madinah_a_quad" class="form-control" value="{{ package.madinah_a_quad|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Sharing</label><input type="number" name="madinah_a_sharing" class="form-control" value="{{ package.madinah_a_sharing|default:0 }}" placeholder="0"></div>
+                    </div>
+                </div>
+                <div class="dynamic-row">
+                    <div class="dynamic-row-header">Madinah B</div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="field-label">Double</label><input type="number" name="madinah_b_double" class="form-control" value="{{ package.madinah_b_double|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Triple</label><input type="number" name="madinah_b_triple" class="form-control" value="{{ package.madinah_b_triple|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Quad</label><input type="number" name="madinah_b_quad" class="form-control" value="{{ package.madinah_b_quad|default:0 }}" placeholder="0"></div>
+                        <div class="form-group"><label class="field-label">Sharing</label><input type="number" name="madinah_b_sharing" class="form-control" value="{{ package.madinah_b_sharing|default:0 }}" placeholder="0"></div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-actions">
+                    <span></span>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- ACCOMMODATION TAB -->
+            <div class="tab-panel" data-panel="accommodation">
+                <p class="row-subtext">Check In / Check Out for same_hotel_for_both packages (A &amp; B) Select hotels A and B separately—if the hotel for both packages is the same, &amp; tick "Same hotel for packages A & B".</p>
+                <div id="accommodationWrap">
+                    {% for acc in package.accommodations.all %}
+                    <div class="dynamic-row">
+                        <div class="dynamic-row-header"><span>Accommodation</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="field-label">Place</label>
+                                <select name="accommodation_place[]" class="form-control">
+                                    <option value="">-- Select Place --</option>
+                                    {% for val, label in place_choices %}
+                                    <option value="{{ val }}" {% if acc.place == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="field-label">Check In</label><input type="date" name="accommodation_check_in[]" class="form-control" value="{{ acc.check_in|date:'Y-m-d' }}"></div>
+                            <div class="form-group"><label class="field-label">Check Out</label><input type="date" name="accommodation_check_out[]" class="form-control" value="{{ acc.check_out|date:'Y-m-d' }}"></div>
+                            <div class="form-group" style="justify-content:flex-end; flex-direction:row; align-items:center; gap:8px;">
+                                <label style="display:flex; align-items:center; gap:6px; font-weight:600; margin-top:22px;"><input type="checkbox" name="accommodation_same_hotel[]" {% if acc.same_hotel_for_both %}checked{% endif %}> Same Hotel for Package A &amp; B</label>
+                            </div>
+                        </div>
+
+                        <div class="dynamic-row-header" style="color:var(--teal-dark); margin-top:12px;">Package A</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="field-label">Accommodation Type (A)</label>
+                                <select name="accommodation_type_a[]" class="form-control">
+                                    <option value="">-- Select Type --</option>
+                                    {% for val, label in accommodation_type_choices %}
+                                    <option value="{{ val }}" {% if acc.accommodation_type_a == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="field-label">Saudi Star Rating (A)</label>
+                                <select name="accommodation_rating_a[]" class="form-control">
+                                    <option value="">-- Select Rating --</option>
+                                    {% for val, label in star_rating_choices %}
+                                    <option value="{{ val }}" {% if acc.saudi_star_rating_a == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="field-label">Hotel (A)</label><input type="text" name="accommodation_hotel_a[]" class="form-control" value="{{ acc.hotel_a }}"></div>
+                        </div>
+
+                        <div class="dynamic-row-header" style="color:var(--red); margin-top:12px;">Package B</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="field-label">Accommodation Type (B)</label>
+                                <select name="accommodation_type_b[]" class="form-control">
+                                    <option value="">-- Select Type --</option>
+                                    {% for val, label in accommodation_type_choices %}
+                                    <option value="{{ val }}" {% if acc.accommodation_type_b == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="field-label">Saudi Star Rating (B)</label>
+                                <select name="accommodation_rating_b[]" class="form-control">
+                                    <option value="">-- Select Rating --</option>
+                                    {% for val, label in star_rating_choices %}
+                                    <option value="{{ val }}" {% if acc.saudi_star_rating_b == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="field-label">Hotel (B)</label><input type="text" name="accommodation_hotel_b[]" class="form-control" value="{{ acc.hotel_b }}"></div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Distance (meter)</label><input type="number" name="accommodation_distance[]" class="form-control" value="{{ acc.distance_meter|default:'' }}"></div>
+                            <div class="form-group"><label class="field-label">Azizia Date</label><input type="date" name="accommodation_azizia_date[]" class="form-control" value="{{ acc.azizia_date|date:'Y-m-d' }}"></div>
+                            <div class="form-group">
+                                <label class="field-label">Food Package</label>
+                                <select name="accommodation_food[]" class="form-control">
+                                    <option value="">-- Select Package --</option>
+                                    {% for val, label in food_choices %}
+                                    <option value="{{ val }}" {% if acc.food_package == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="field-label">Days</label><input type="number" name="accommodation_days[]" class="form-control" value="{{ acc.accommodation_days|default:'' }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Actual Check In Time</label><input type="datetime-local" name="accommodation_actual_checkin[]" class="form-control" value="{{ acc.actual_check_in_time|date:'Y-m-d\TH:i' }}"></div>
+                            <div class="form-group"><label class="field-label">Actual Check Out Time</label><input type="datetime-local" name="accommodation_actual_checkout[]" class="form-control" value="{{ acc.actual_check_out_time|date:'Y-m-d\TH:i' }}"></div>
+                            <div class="form-group"><label class="field-label">Nights</label><input type="number" name="accommodation_nights[]" class="form-control" value="{{ acc.nights|default:'' }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="field-label">Makkah Ziarat</label>
+                                <select name="accommodation_makkah_ziarat[]" class="form-control">
+                                    <option value="">-- Select --</option>
+                                    {% for val, label in yes_no_choices %}
+                                    <option value="{{ val }}" {% if acc.makkah_ziarat == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="field-label">Madinah Ziarat</label>
+                                <select name="accommodation_madinah_ziarat[]" class="form-control">
+                                    <option value="">-- Select --</option>
+                                    {% for val, label in yes_no_choices %}
+                                    <option value="{{ val }}" {% if acc.madinah_ziarat == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="field-label">Distribution</label><input type="text" name="accommodation_distribution[]" class="form-control" value="{{ acc.distribution }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Camp</label><input type="text" name="accommodation_camp[]" class="form-control" value="{{ acc.camp }}"></div>
+                            <div class="form-group"><label class="field-label">Arafat</label><input type="text" name="accommodation_arafat[]" class="form-control" value="{{ acc.arafat }}"></div>
+                            <div class="form-group"><label class="field-label">Azizia Shuttle</label><input type="text" name="accommodation_shuttle[]" class="form-control" value="{{ acc.azizia_shuttle }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Bedding (Sofa Mattress)</label><input type="text" name="accommodation_bedding[]" class="form-control" value="{{ acc.bedding_sofa_mattress }}"></div>
+                            <div class="form-group"><label class="field-label">Sharing (Room / Tent / Camp)</label><input type="text" name="accommodation_sharing[]" class="form-control" value="{{ acc.sharing_room_tent_camp }}"></div>
+                            <div class="form-group"><label class="field-label">Sharing Type</label><input type="text" name="accommodation_sharing_type[]" class="form-control" value="{{ acc.sharing_type }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Note</label><input type="text" name="accommodation_note[]" class="form-control" value="{{ acc.note }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn-add-row" onclick="addAccommodationRow()">+ Add</button>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#171d3d; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- TRANSPORT TAB -->
+            <div class="tab-panel" data-panel="transport">
+                <h3 class="dynamic-row-header">Transport Details</h3>
+                <div id="transportWrap">
+                    {% for t in package.transports.all %}
+                    <div class="dynamic-row">
+                        <div class="dynamic-row-header"><span>Route</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Route</label><input type="text" name="transport_route[]" class="form-control" value="{{ t.route }}"></div>
+                            <div class="form-group"><label class="field-label">Arrival</label><input type="text" name="transport_arrival[]" class="form-control" value="{{ t.arrival }}"></div>
+                            <div class="form-group"><label class="field-label">Departure</label><input type="text" name="transport_departure[]" class="form-control" value="{{ t.departure }}"></div>
+                            <div class="form-group"><label class="field-label">Type</label><input type="text" name="transport_type[]" class="form-control" value="{{ t.type }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Vehicle</label><input type="text" name="transport_vehicle[]" class="form-control" value="{{ t.vehicle }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn-add-row" onclick="addTransportRow()">+ Add</button>
+
+                <h3 class="dynamic-row-header" style="margin-top:24px;">Flight</h3>
+                <div id="flightWrap">
+                    {% for f in package.flights.all %}
+                    <div class="dynamic-row">
+                        <div class="dynamic-row-header"><span>Flight</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Airline</label><input type="text" name="flight_airline[]" class="form-control" value="{{ f.airline }}"></div>
+                            <div class="form-group"><label class="field-label">Flight No.</label><input type="text" name="flight_no[]" class="form-control" value="{{ f.flight_no }}"></div>
+                            <div class="form-group">
+                                <label class="field-label">Flight Class</label>
+                                <select name="flight_class[]" class="form-control">
+                                    <option value="">-- Select --</option>
+                                    {% for val, label in flight_class_choices %}
+                                    <option value="{{ val }}" {% if f.flight_class == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="field-label">Origin</label><input type="text" name="flight_origin[]" class="form-control" value="{{ f.origin }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Destination</label><input type="text" name="flight_destination[]" class="form-control" value="{{ f.destination }}"></div>
+                            <div class="form-group"><label class="field-label">Departure Date</label><input type="date" name="flight_departure_date[]" class="form-control" value="{{ f.departure_date|date:'Y-m-d' }}"></div>
+                            <div class="form-group"><label class="field-label">Departure Time</label><input type="time" name="flight_departure_time[]" class="form-control" value="{{ f.departure_time|time:'H:i' }}"></div>
+                            <div class="form-group"><label class="field-label">Arrival Date</label><input type="date" name="flight_arrival_date[]" class="form-control" value="{{ f.arrival_date|date:'Y-m-d' }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Arrival Time</label><input type="time" name="flight_arrival_time[]" class="form-control" value="{{ f.arrival_time|time:'H:i' }}"></div>
+                            <div class="form-group"><label class="field-label">PNR No.</label><input type="text" name="flight_pnr[]" class="form-control" value="{{ f.pnr_no }}"></div>
+                            <div class="form-group"><label class="field-label">Ticket Amount (SAR)</label><input type="number" step="0.01" name="flight_amount[]" class="form-control" value="{{ f.ticket_amount|default:'' }}"></div>
+                            <div class="form-group">
+                                <label class="field-label">Is Preferred</label>
+                                <div style="display:flex; gap:16px; margin-top:6px;">
+                                    <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="flight_preferred[]" value="yes" {% if f.is_preferred == 'yes' %}checked{% endif %}> Yes</label>
+                                    <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="flight_preferred[]" value="no" {% if f.is_preferred != 'yes' %}checked{% endif %}> No</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn-add-row" onclick="addFlightRow()">+ Add</button>
+
+                <h3 class="dynamic-row-header" style="margin-top:24px;">Train</h3>
+                <div id="trainWrap">
+                    {% for tr in package.trains.all %}
+                    <div class="dynamic-row">
+                        <div class="dynamic-row-header"><span>Train</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Railway</label><input type="text" name="train_railway[]" class="form-control" value="{{ tr.railway }}"></div>
+                            <div class="form-group"><label class="field-label">Train No.</label><input type="text" name="train_no[]" class="form-control" value="{{ tr.train_no }}"></div>
+                            <div class="form-group"><label class="field-label">Train Class</label><input type="text" name="train_class[]" class="form-control" value="{{ tr.train_class }}"></div>
+                            <div class="form-group"><label class="field-label">Origin</label><input type="text" name="train_origin[]" class="form-control" value="{{ tr.origin }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Destination</label><input type="text" name="train_destination[]" class="form-control" value="{{ tr.destination }}"></div>
+                            <div class="form-group"><label class="field-label">Departure Date</label><input type="date" name="train_departure_date[]" class="form-control" value="{{ tr.departure_date|date:'Y-m-d' }}"></div>
+                            <div class="form-group"><label class="field-label">Departure Time</label><input type="time" name="train_departure_time[]" class="form-control" value="{{ tr.departure_time|time:'H:i' }}"></div>
+                            <div class="form-group"><label class="field-label">Arrival Date</label><input type="date" name="train_arrival_date[]" class="form-control" value="{{ tr.arrival_date|date:'Y-m-d' }}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="field-label">Arrival Time</label><input type="time" name="train_arrival_time[]" class="form-control" value="{{ tr.arrival_time|time:'H:i' }}"></div>
+                            <div class="form-group"><label class="field-label">PNR No.</label><input type="text" name="train_pnr[]" class="form-control" value="{{ tr.pnr_no }}"></div>
+                            <div class="form-group"><label class="field-label">Ticket Amount (SAR)</label><input type="number" step="0.01" name="train_amount[]" class="form-control" value="{{ tr.ticket_amount|default:'' }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn-add-row" onclick="addTrainRow()">+ Add</button>
+
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#171d3d; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- TRAINING / GIFTS TAB -->
+            <div class="tab-panel" data-panel="training">
+                <h3 class="dynamic-row-header">Training Session</h3>
+                <p style="color:var(--red); font-weight:600; margin-bottom:20px;">No Training Sessions Exists! <a href="{% url 'general_task_list' %}" style="color:var(--teal-dark);">Please create training sessions first</a></p>
+
+                <h3 class="dynamic-row-header">Giveaways</h3>
+                <div class="form-group">
+                    <textarea name="giveaways" class="form-control" rows="5" placeholder="Write here what giveaway you are giving...">{{ package.giveaways|default:'' }}</textarea>
+                </div>
+
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#171d3d; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- TERMS & CONDITION TAB -->
+            <div class="tab-panel" data-panel="terms">
+                <h3 class="dynamic-row-header">Terms &amp; Condition</h3>
+                <div class="form-group">
+                    <textarea name="terms_condition" class="form-control" rows="10" placeholder="Write your content here...">{{ package.terms_condition|default:'' }}</textarea>
+                </div>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#171d3d; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- ITINERARY TAB -->
+            <div class="tab-panel" data-panel="itinerary">
+                <h3 class="dynamic-row-header">Description</h3>
+                <div class="form-group">
+                    <textarea name="itinerary_description" class="form-control" rows="10" placeholder="Write your content here...">{{ package.itinerary_description|default:'' }}</textarea>
+                </div>
+
+                <h3 class="dynamic-row-header" style="margin-top:24px;">Images</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">MINA</label>
+                        <input type="file" name="itinerary_image_mina" class="form-control" accept="image/*">
+                        {% if package.itinerary_image_mina %}<div class="row-subtext">Current: <a href="{{ package.itinerary_image_mina.url }}" target="_blank">view file</a></div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">ARAFAT</label>
+                        <input type="file" name="itinerary_image_arafat" class="form-control" accept="image/*">
+                        {% if package.itinerary_image_arafat %}<div class="row-subtext">Current: <a href="{{ package.itinerary_image_arafat.url }}" target="_blank">view file</a></div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">MUZDALIFAH</label>
+                        <input type="file" name="itinerary_image_muzdalifah" class="form-control" accept="image/*">
+                        {% if package.itinerary_image_muzdalifah %}<div class="row-subtext">Current: <a href="{{ package.itinerary_image_muzdalifah.url }}" target="_blank">view file</a></div>{% endif %}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="field-label">MAKKAH / MINA RAMI - DAY ONE</label>
+                        <input type="file" name="itinerary_image_rami_day1" class="form-control" accept="image/*">
+                        {% if package.itinerary_image_rami_day1 %}<div class="row-subtext">Current: <a href="{{ package.itinerary_image_rami_day1.url }}" target="_blank">view file</a></div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">MINA RAMI - DAY TWO</label>
+                        <input type="file" name="itinerary_image_rami_day2" class="form-control" accept="image/*">
+                        {% if package.itinerary_image_rami_day2 %}<div class="row-subtext">Current: <a href="{{ package.itinerary_image_rami_day2.url }}" target="_blank">view file</a></div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">MINA / MAKKAH RAMI - DAY THREE</label>
+                        <input type="file" name="itinerary_image_rami_day3" class="form-control" accept="image/*">
+                        {% if package.itinerary_image_rami_day3 %}<div class="row-subtext">Current: <a href="{{ package.itinerary_image_rami_day3.url }}" target="_blank">view file</a></div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#171d3d; box-shadow:none;">&#8592; Prev</button>
+                    <button type="button" class="btn tab-next">Next &#8594;</button>
+                </div>
+            </div>
+
+            <!-- MAKTAB ADDRESS TAB -->
+            <div class="tab-panel" data-panel="maktab">
+                <h3 class="dynamic-row-header">Maktab Address</h3>
+                <div class="form-row">
+                    <div class="form-group"><label class="field-label">Maktab Address</label><input type="text" name="maktab_address" class="form-control" value="{{ package.maktab_address|default:'' }}"></div>
+                    <div class="form-group"><label class="field-label">Office Address</label><input type="text" name="office_address" class="form-control" value="{{ package.office_address|default:'' }}"></div>
+                </div>
+                <div class="tab-nav-actions">
+                    <button type="button" class="btn tab-prev" style="background:#171d3d; box-shadow:none;">&#8592; Prev</button>
+                    <button type="submit" class="btn">&#128190; {% if package %}Update{% else %}Create{% endif %}</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+<!-- Hidden templates for dynamic rows -->
+<template id="accommodationRowTemplate">
+    <div class="dynamic-row">
+        <div class="dynamic-row-header"><span>Accommodation</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="field-label">Place</label>
+                <select name="accommodation_place[]" class="form-control">
+                    <option value="">-- Select Place --</option>
+                    {% for val, label in place_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">Check In</label><input type="date" name="accommodation_check_in[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Check Out</label><input type="date" name="accommodation_check_out[]" class="form-control"></div>
+            <div class="form-group" style="justify-content:flex-end; flex-direction:row; align-items:center; gap:8px;">
+                <label style="display:flex; align-items:center; gap:6px; font-weight:600; margin-top:22px;"><input type="checkbox" name="accommodation_same_hotel[]"> Same Hotel for Package A &amp; B</label>
+            </div>
+        </div>
+        <div class="dynamic-row-header" style="color:var(--teal-dark); margin-top:12px;">Package A</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="field-label">Accommodation Type (A)</label>
+                <select name="accommodation_type_a[]" class="form-control">
+                    <option value="">-- Select Type --</option>
+                    {% for val, label in accommodation_type_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Saudi Star Rating (A)</label>
+                <select name="accommodation_rating_a[]" class="form-control">
+                    <option value="">-- Select Rating --</option>
+                    {% for val, label in star_rating_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">Hotel (A)</label><input type="text" name="accommodation_hotel_a[]" class="form-control"></div>
+        </div>
+        <div class="dynamic-row-header" style="color:var(--red); margin-top:12px;">Package B</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="field-label">Accommodation Type (B)</label>
+                <select name="accommodation_type_b[]" class="form-control">
+                    <option value="">-- Select Type --</option>
+                    {% for val, label in accommodation_type_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Saudi Star Rating (B)</label>
+                <select name="accommodation_rating_b[]" class="form-control">
+                    <option value="">-- Select Rating --</option>
+                    {% for val, label in star_rating_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">Hotel (B)</label><input type="text" name="accommodation_hotel_b[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Distance (meter)</label><input type="number" name="accommodation_distance[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Azizia Date</label><input type="date" name="accommodation_azizia_date[]" class="form-control"></div>
+            <div class="form-group">
+                <label class="field-label">Food Package</label>
+                <select name="accommodation_food[]" class="form-control">
+                    <option value="">-- Select Package --</option>
+                    {% for val, label in food_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">Days</label><input type="number" name="accommodation_days[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Actual Check In Time</label><input type="datetime-local" name="accommodation_actual_checkin[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Actual Check Out Time</label><input type="datetime-local" name="accommodation_actual_checkout[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Nights</label><input type="number" name="accommodation_nights[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="field-label">Makkah Ziarat</label>
+                <select name="accommodation_makkah_ziarat[]" class="form-control">
+                    <option value="">-- Select --</option>
+                    {% for val, label in yes_no_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Madinah Ziarat</label>
+                <select name="accommodation_madinah_ziarat[]" class="form-control">
+                    <option value="">-- Select --</option>
+                    {% for val, label in yes_no_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">Distribution</label><input type="text" name="accommodation_distribution[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Camp</label><input type="text" name="accommodation_camp[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Arafat</label><input type="text" name="accommodation_arafat[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Azizia Shuttle</label><input type="text" name="accommodation_shuttle[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Bedding (Sofa Mattress)</label><input type="text" name="accommodation_bedding[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Sharing (Room / Tent / Camp)</label><input type="text" name="accommodation_sharing[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Sharing Type</label><input type="text" name="accommodation_sharing_type[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Note</label><input type="text" name="accommodation_note[]" class="form-control"></div>
+        </div>
+    </div>
+</template>
+
+<template id="transportRowTemplate">
+    <div class="dynamic-row">
+        <div class="dynamic-row-header"><span>Route</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Route</label><input type="text" name="transport_route[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Arrival</label><input type="text" name="transport_arrival[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Departure</label><input type="text" name="transport_departure[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Type</label><input type="text" name="transport_type[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Vehicle</label><input type="text" name="transport_vehicle[]" class="form-control"></div>
+        </div>
+    </div>
+</template>
+
+<template id="flightRowTemplate">
+    <div class="dynamic-row">
+        <div class="dynamic-row-header"><span>Flight</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Airline</label><input type="text" name="flight_airline[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Flight No.</label><input type="text" name="flight_no[]" class="form-control"></div>
+            <div class="form-group">
+                <label class="field-label">Flight Class</label>
+                <select name="flight_class[]" class="form-control">
+                    <option value="">-- Select --</option>
+                    {% for val, label in flight_class_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label class="field-label">Origin</label><input type="text" name="flight_origin[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Destination</label><input type="text" name="flight_destination[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Departure Date</label><input type="date" name="flight_departure_date[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Departure Time</label><input type="time" name="flight_departure_time[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Arrival Date</label><input type="date" name="flight_arrival_date[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Arrival Time</label><input type="time" name="flight_arrival_time[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">PNR No.</label><input type="text" name="flight_pnr[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Ticket Amount (SAR)</label><input type="number" step="0.01" name="flight_amount[]" class="form-control"></div>
+            <div class="form-group">
+                <label class="field-label">Is Preferred</label>
+                <div style="display:flex; gap:16px; margin-top:6px;">
+                    <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="flight_preferred[]" value="yes"> Yes</label>
+                    <label style="display:flex; align-items:center; gap:6px; font-weight:600;"><input type="radio" name="flight_preferred[]" value="no" checked> No</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="trainRowTemplate">
+    <div class="dynamic-row">
+        <div class="dynamic-row-header"><span>Train</span> <span class="remove-row-btn" onclick="this.closest('.dynamic-row').remove();">&times; Remove</span></div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Railway</label><input type="text" name="train_railway[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Train No.</label><input type="text" name="train_no[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Train Class</label><input type="text" name="train_class[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Origin</label><input type="text" name="train_origin[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Destination</label><input type="text" name="train_destination[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Departure Date</label><input type="date" name="train_departure_date[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Departure Time</label><input type="time" name="train_departure_time[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Arrival Date</label><input type="date" name="train_arrival_date[]" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="field-label">Arrival Time</label><input type="time" name="train_arrival_time[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">PNR No.</label><input type="text" name="train_pnr[]" class="form-control"></div>
+            <div class="form-group"><label class="field-label">Ticket Amount (SAR)</label><input type="number" step="0.01" name="train_amount[]" class="form-control"></div>
+        </div>
+    </div>
+</template>
+
+<script>
+(function() {
+    // ---- Tab switching (same pattern as Booking form) ----
+    const tabBtns = document.querySelectorAll('#packageTabs .tab-btn');
+    const panels = document.querySelectorAll('.tab-panel');
+    const tabOrder = ['package', 'accommodation', 'transport', 'training', 'terms', 'itinerary', 'maktab'];
+
+    function showTab(name) {
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+        panels.forEach(p => p.classList.toggle('active', p.dataset.panel === name));
+        window.scrollTo({ top: document.querySelector('#packageTabs').offsetTop - 20, behavior: 'smooth' });
+    }
+    window.showTab = showTab;
+
+    tabBtns.forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
+
+    document.querySelectorAll('.tab-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const current = document.querySelector('.tab-panel.active').dataset.panel;
+            const idx = tabOrder.indexOf(current);
+            if (idx < tabOrder.length - 1) showTab(tabOrder[idx + 1]);
+        });
+    });
+    document.querySelectorAll('.tab-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const current = document.querySelector('.tab-panel.active').dataset.panel;
+            const idx = tabOrder.indexOf(current);
+            if (idx > 0) showTab(tabOrder[idx - 1]);
+        });
+    });
+
+    window.addAccommodationRow = function() {
+        const tpl = document.getElementById('accommodationRowTemplate').content.cloneNode(true);
+        document.getElementById('accommodationWrap').appendChild(tpl);
+    };
+    window.addTransportRow = function() {
+        const tpl = document.getElementById('transportRowTemplate').content.cloneNode(true);
+        document.getElementById('transportWrap').appendChild(tpl);
+    };
+    window.addFlightRow = function() {
+        const tpl = document.getElementById('flightRowTemplate').content.cloneNode(true);
+        document.getElementById('flightWrap').appendChild(tpl);
+    };
+    window.addTrainRow = function() {
+        const tpl = document.getElementById('trainRowTemplate').content.cloneNode(true);
+        document.getElementById('trainWrap').appendChild(tpl);
+    };
+
+    {% if not package %}
+    // Seed one empty row per repeatable section for new packages
+    addAccommodationRow();
+    addTransportRow();
+    addFlightRow();
+    addTrainRow();
+    {% endif %}
+})();
+</script>
+{% endblock %}

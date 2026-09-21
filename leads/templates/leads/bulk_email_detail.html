@@ -1,0 +1,46 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ campaign.name }} - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <h1 class="page-title" style="margin:0;">{{ campaign.name }}</h1>
+    <div class="action-links">
+        {% if campaign.status == 'draft' %}
+        <form method="post" action="{% url 'bulk_email_send' campaign.pk %}" onsubmit="return confirm('Send this campaign to {{ campaign.recipient_count }} recipients?')" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn">Send Campaign</button>
+        </form>
+        {% endif %}
+        <a href="{% url 'bulk_email_list' %}" class="btn btn-small" style="background:#fff; color:#666; border:1px solid #ddd;">Back to List</a>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+    <p><strong>Subject:</strong> {{ campaign.subject }}</p>
+    <p style="white-space:pre-wrap;"><strong>Body:</strong><br>{{ campaign.body }}</p>
+    <p style="color:var(--text-muted); font-size:13px; margin-top:12px;">
+        Status: <span class="pill pill-{% if campaign.status == 'sent' %}converted{% elif campaign.status == 'failed' %}lost{% else %}new{% endif %}">{{ campaign.get_status_display }}</span>
+        &nbsp;·&nbsp; {{ campaign.recipient_count }} recipients &nbsp;·&nbsp; {{ campaign.sent_count }} sent &nbsp;·&nbsp; {{ campaign.failed_count }} failed
+    </p>
+</div>
+
+<h2 class="section-heading">Recipients {% if recipients|length >= 200 %}(first 200 shown){% endif %}</h2>
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead><tr><th>Lead</th><th>Email</th><th>Status</th><th>Sent At</th></tr></thead>
+        <tbody>
+            {% for r in recipients %}
+            <tr>
+                <td>{{ r.lead.name|default:"-" }}</td>
+                <td>{{ r.email }}</td>
+                <td><span class="pill pill-{% if r.status == 'sent' %}converted{% elif r.status == 'failed' %}lost{% else %}new{% endif %}">{{ r.get_status_display }}</span></td>
+                <td>{{ r.sent_at|date:"d M Y, h:i A"|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty-state">No recipients matched this segment.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

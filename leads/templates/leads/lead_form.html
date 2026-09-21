@@ -1,0 +1,126 @@
+{% extends 'leads/base.html' %}
+{% block title %}Create Lead - Holiday Express Travel CRM{% endblock %}
+{% block content %}
+<div class="form-card">
+    <div class="form-card-header">
+        <h2>Lead Form</h2>
+        <span class="spo-badge">SPO Name : {{ spo_name|default:"Null" }}</span>
+    </div>
+
+    <div style="padding: 20px 32px 0;">
+        <div class="card" style="margin-bottom:0; border:1px dashed var(--border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <strong>Bulk Import Leads</strong>
+                    <p style="margin:4px 0 0; font-size:13px; color:var(--text-muted);">
+                        Upload a CSV or Excel file with 60-100 leads — they'll be created automatically.
+                        Required columns: <code>name</code>, <code>contact_number</code>.
+                        Optional: <code>email</code>, <code>city</code>, <code>country</code>, <code>address</code>,
+                        <code>lead_source</code>, <code>quotation</code>, <code>detail</code>.
+                    </p>
+                </div>
+                <form method="post" action="{% url 'bulk_import_leads' %}" enctype="multipart/form-data"
+                      style="display:flex; align-items:center; gap:10px;">
+                    {% csrf_token %}
+                    <input type="file" name="import_file" accept=".csv,.xlsx,.xls" required
+                            style="font-size:13px;">
+                     <button type="submit" class="btn btn-small">&#11014; Upload & Import</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <label class="field-label">Lead Source <span class="required">*</span></label>
+            <div class="radio-group">
+                {% for radio in form.lead_source %}
+                    <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                {% endfor %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Name <span class="required">*</span></label>
+                    {{ form.name }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Contact Number <span class="required">*</span></label>
+                    {{ form.contact_number }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Email</label>
+                    {{ form.email }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Country:</label>
+                    {{ form.country }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">City:</label>
+                    {{ form.city }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Address</label>
+                    {{ form.address }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Trip Type</label>
+                    {{ form.trip_type }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Destination</label>
+                    {{ form.destination }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Budget</label>
+                    {{ form.budget }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Travel Start Date</label>
+                    {{ form.travel_start_date }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Travel End Date</label>
+                    {{ form.travel_end_date }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Adults</label>
+                    {{ form.adults }}
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Children</label>
+                    {{ form.children }}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:22px;">
+                <label class="field-label">Quotation</label>
+                {{ form.quotation }}
+            </div>
+
+            <div class="form-group" style="margin-bottom:22px;">
+                <label class="field-label">Detail</label>
+                {{ form.detail }}
+            </div>
+
+            {% if form.errors %}<div class="alert alert-error">Please correct the errors below.</div>{% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

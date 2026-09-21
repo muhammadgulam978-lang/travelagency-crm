@@ -1,0 +1,48 @@
+{% extends 'leads/base.html' %}
+{% block title %}Suppliers - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 class="page-title" style="margin:0;">Suppliers</h1>
+    <a href="{% url 'supplier_create' %}" class="btn">+ Add Supplier</a>
+</div>
+
+<div class="card filter-card" style="margin-bottom:16px;">
+    <form method="get" class="filter-row" style="display:flex; gap:12px; align-items:center;">
+        <select name="type" class="form-control" onchange="this.form.submit()">
+            <option value="">All Types</option>
+            {% for val, label in type_choices %}
+            <option value="{{ val }}" {% if request.GET.type == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr><th>Name</th><th>Type</th><th>City</th><th>Contact</th><th>Phone / Email</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for s in suppliers %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td><span class="badge badge-blue">{{ s.get_supplier_type_display }}</span></td>
+                <td>{{ s.city|default:"-" }}{% if s.country %}, {{ s.country }}{% endif %}</td>
+                <td>{{ s.contact_person|default:"-" }}</td>
+                <td>{{ s.phone|default:"" }} {% if s.email %}· {{ s.email }}{% endif %}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'supplier_edit' s.pk %}">Edit</a>
+                        <a href="{% url 'supplier_delete' s.pk %}" onclick="return confirm('Delete {{ s.name }}?')">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty-state">No suppliers yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

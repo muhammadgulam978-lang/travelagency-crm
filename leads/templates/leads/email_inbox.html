@@ -1,0 +1,102 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Emails - Lead CRM{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>All Emails</h2>
+    {% if request.user|has_full_access:'emails' %}
+    <a href="{% url 'email_compose' %}" class="btn btn-primary">+ Compose Email</a>
+    {% endif %}
+</div>
+
+<form method="post" action="{% url 'email_bulk_delete' %}" id="bulk-delete-form">
+    {% csrf_token %}
+    {% if request.user|has_full_access:'emails' %}
+    <div style="margin-bottom:10px;">
+        <button type="submit" class="btn btn-danger"
+                onclick="return confirm('Delete selected emails? This cannot be undone.');">
+            🗑 Delete Selected
+        </button>
+    </div>
+    {% endif %}
+
+    <div class="table-wrapper">
+        <table class="data-table" style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr>
+                    {% if request.user|has_full_access:'emails' %}
+                    <th><input type="checkbox" id="select-all"></th>
+                    {% endif %}
+                    <th>To</th>
+                    <th>Subject</th>
+                    <th>Lead</th>
+                    <th>Sent By</th>
+                    <th>Direction</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for email in emails %}
+                <tr>
+                    {% if request.user|has_full_access:'emails' %}
+                    <td><input type="checkbox" name="email_ids" value="{{ email.pk }}" class="row-check"></td>
+                    {% endif %}
+
+                    <td>
+    {% if email.direction == 'inbound' %}
+        <span class="badge badge-blue">📥 Received</span>
+    {% else %}
+        <span class="badge badge-green">📤 Sent</span>
+    {% endif %}
+</td>
+                    <td>{{ email.to_email }}</td>
+                    <td>{{ email.subject }}</td>
+                    <td>
+                        {% if email.lead %}
+                            {{ email.lead }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ email.sent_by.username|default:"—" }}</td>
+                    <td>
+                        {% if email.status == 'sent' %}
+                            <span class="badge badge-green">Sent</span>
+                        {% else %}
+                            <span class="badge badge-red">Failed</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ email.created_at|date:"d M Y, h:i A" }}</td>
+                    <td>
+                        <div class="action-links">
+                            <a href="{% url 'email_detail' email.pk %}">View</a>
+                            {% if request.user|has_full_access:'emails' %}
+                            |
+                            <a href="{% url 'email_delete' email.pk %}"
+                               onclick="return confirm('Delete this email?');"
+                               style="color:#dc3545;">Delete</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align:center; padding:20px;">No emails sent yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<script>
+document.getElementById('select-all')?.addEventListener('change', function () {
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endblock %}

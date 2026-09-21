@@ -1,0 +1,51 @@
+{% extends 'leads/base.html' %}
+{% block title %}Corporate Travel Requests - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 class="page-title" style="margin:0;">Corporate Travel Requests</h1>
+    <a href="{% url 'corporate_request_create' %}" class="btn">+ New Request</a>
+</div>
+
+<div class="card filter-card" style="margin-bottom:16px;">
+    <form method="get" class="filter-row" style="display:flex; gap:12px; align-items:center;">
+        <select name="status" class="form-control" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead><tr><th>Company</th><th>Employee</th><th>Destination</th><th>Travel Dates</th><th>Est. Cost</th><th>Corp Rate</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for r in requests %}
+            <tr>
+                <td>{{ r.company.name }}</td>
+                <td>{{ r.employee.get_full_name|default:"-" }}</td>
+                <td>{{ r.destination|default:"-" }}</td>
+                <td>{{ r.travel_date|date:"d M"|default:"-" }} - {{ r.return_date|date:"d M Y"|default:"-" }}</td>
+                <td>{{ r.estimated_cost }}</td>
+                <td>{% if r.corporate_rate_applied %}✔️{% else %}—{% endif %}</td>
+                <td><span class="pill pill-{% if r.status == 'approved' or r.status == 'booked' %}converted{% elif r.status == 'rejected' %}lost{% else %}quotation{% endif %}">{{ r.get_status_display }}</span></td>
+                <td>
+                    <div class="action-links">
+                        {% if r.status == 'pending' %}
+                        <a href="{% url 'corporate_request_status' r.pk 'approved' %}">Approve</a>
+                        <a href="{% url 'corporate_request_status' r.pk 'rejected' %}">Reject</a>
+                        {% endif %}
+                        <a href="{% url 'corporate_request_delete' r.pk %}" onclick="return confirm('Delete this request?')">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="empty-state">No corporate travel requests yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

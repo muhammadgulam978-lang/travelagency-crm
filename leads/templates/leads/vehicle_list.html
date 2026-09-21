@@ -1,0 +1,37 @@
+{% extends 'leads/base.html' %}
+{% block title %}Vehicles - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 class="page-title" style="margin:0;">Vehicles</h1>
+    <div class="action-links">
+        <a href="{% url 'transport_list' %}" class="btn btn-small" style="background:#fff; color:var(--teal); border:1px solid var(--teal);">Transport Schedule</a>
+        <a href="{% url 'vehicle_create' %}" class="btn">+ Add Vehicle</a>
+    </div>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead><tr><th>Type</th><th>Make/Model</th><th>Plate #</th><th>Capacity</th><th>Supplier</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for v in vehicles %}
+            <tr>
+                <td>{{ v.get_vehicle_type_display }}</td>
+                <td>{{ v.make_model|default:"-" }}</td>
+                <td>{{ v.plate_number|default:"-" }}</td>
+                <td>{{ v.capacity }}</td>
+                <td>{{ v.supplier|default:"-" }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'vehicle_delete' v.pk %}" onclick="return confirm('Remove this vehicle?')">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty-state">No vehicles yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

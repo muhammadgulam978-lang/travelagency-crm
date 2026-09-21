@@ -1,0 +1,50 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ title }} - Travel CRM{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ title }}</h1>
+<div class="form-card">
+    <div class="form-card-header"><h2>{{ title }}</h2></div>
+    <div class="form-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Vehicle Type</label>
+                    <select name="vehicle_type" class="form-control">
+                        {% for val, label in vehicle_types %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Supplier</label>
+                    <select name="supplier" class="form-control">
+                        <option value="">-- In-house / None --</option>
+                        {% for s in suppliers %}
+                        <option value="{{ s.pk }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Make / Model</label>
+                    <input type="text" name="make_model" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Plate Number</label>
+                    <input type="text" name="plate_number" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Seating Capacity</label>
+                <input type="number" name="capacity" class="form-control" value="4">
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'vehicle_list' %}" style="margin-right:12px; color:#666;">Cancel</a>
+                <button type="submit" class="btn">Add Vehicle</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

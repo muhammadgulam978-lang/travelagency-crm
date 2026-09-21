@@ -1,0 +1,20 @@
+{% load travel_ui %}
+{# Usage:  {% include "components/countdown.html" with departure=booking.departure_date %}
+   Add  inline=True  for the compact table version. #}
+{% countdown_class departure as cdclass %}
+{% if inline %}
+<span class="countdown-inline {{ cdclass }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    {% countdown_text departure %}
+</span>
+{% else %}
+<span class="countdown {{ cdclass }}">
+    <span class="countdown-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    </span>
+    <span>
+        <span class="countdown-num">{% countdown_number departure %}</span>
+        <span class="countdown-unit">{% countdown_unit departure %}</span>
+    </span>
+</span>
+{% endif %}

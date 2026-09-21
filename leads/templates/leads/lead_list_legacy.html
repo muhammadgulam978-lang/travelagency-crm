@@ -1,0 +1,96 @@
+{% extends 'leads/base.html' %}
+{% load custom_filters %}
+{% block title %}{{ title }} - Holiday Express Travel CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">{{ title }}</h1>
+    {% if request.user|has_full_access:'leads' %}
+    <a href="{% url 'create_lead' %}" class="btn">+ New Lead</a>
+    {% endif %}
+</div>
+
+<div class="card filter-card">
+    <form method="get" class="filter-form">
+        <div class="filter-row">
+            <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="form-control" placeholder="Search by name, phone or email...">
+
+            <select name="source" class="form-control">
+                <option value="">All Sources</option>
+                {% for value, label in lead_sources %}
+                <option value="{{ value }}" {% if request.GET.source == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="spo" class="form-control">
+                <option value="">All Sales Persons</option>
+                {% for spo in spos %}
+                <option value="{{ spo.id }}" {% if request.GET.spo == spo.id|stringformat:"s" %}selected{% endif %}>{{ spo.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="score" class="form-control">
+                <option value="">Sort by Score</option>
+                <option value="high" {% if request.GET.score == 'high' %}selected{% endif %}>Highest AI Score</option>
+                <option value="low" {% if request.GET.score == 'low' %}selected{% endif %}>Lowest AI Score</option>
+            </select>
+
+            <button type="submit" class="btn btn-small">Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>Lead</th>
+                <th>Contact</th>
+                <th>Source</th>
+                <th>Status</th>
+                <th>AI Score</th>
+                <th>SPO</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lead in leads %}
+            <tr>
+                <td>
+                    <a href="{% url 'lead_detail' lead.pk %}" class="row-title">{{ lead.name }}</a>
+                    {% if lead.is_duplicate %}<span class="pill pill-lost" style="margin-left:6px;">Duplicate</span>{% endif %}
+                </td>
+                <td>
+                    <div>{{ lead.contact_number }}</div>
+                    {% if lead.email %}<div class="row-subtext">{{ lead.email }}</div>{% endif %}
+                </td>
+                <td>{{ lead.get_lead_source_display }}</td>
+                <td><span class="pill pill-{{ lead.status }}">{{ lead.get_status_display }}</span></td>
+                <td>
+                    <div class="score-cell">
+                        <div class="progress-bar-wrap" style="width:60px;">
+                            <div class="progress-bar-fill {% if lead.ai_score >= 70 %}done{% elif lead.ai_score < 40 %}warning{% endif %}" style="width:{{ lead.ai_score }}%;"></div>
+                        </div>
+                        <span>{{ lead.ai_score }}</span>
+                    </div>
+                </td>
+                <td>{{ lead.spo.name|default:"—" }}</td>
+                <td>{{ lead.created_at|date:"d M Y" }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'lead_detail' lead.pk %}">View</a>
+                        {% if request.user|has_full_access:'leads' %}
+                        <a href="{% url 'lead_delete' lead.pk %}" onclick="return confirm('Delete this lead?');">Delete</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="empty-state">No leads found. Try adjusting your filters.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

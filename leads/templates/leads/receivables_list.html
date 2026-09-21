@@ -1,0 +1,54 @@
+{% extends 'leads/base.html' %}
+{% block title %}Receivables — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Receivables</h1><p>Outstanding balances across active bookings, aged by days overdue.</p></div>
+    <div class="r-page-actions"><a href="{% url 'refund_list' %}" class="r-btn ghost">Refund requests</a></div>
+</div>
+
+<div class="r-aging-grid">
+    <div class="r-aging-cell"><div class="k">Current</div><div class="v">Rs {{ aging_buckets.current|floatformat:0 }}</div></div>
+    <div class="r-aging-cell warn"><div class="k">1-30 days</div><div class="v">Rs {{ aging_buckets.1_30|floatformat:0 }}</div></div>
+    <div class="r-aging-cell warn"><div class="k">31-60 days</div><div class="v">Rs {{ aging_buckets.31_60|floatformat:0 }}</div></div>
+    <div class="r-aging-cell danger"><div class="k">61-90 days</div><div class="v">Rs {{ aging_buckets.61_90|floatformat:0 }}</div></div>
+    <div class="r-aging-cell danger"><div class="k">90+ days</div><div class="v">Rs {{ aging_buckets.90_plus|floatformat:0 }}</div></div>
+</div>
+
+<form method="get" class="r-filters">
+    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search client or company…">
+    <select name="bucket">
+        <option value="">All aging buckets</option>
+        <option value="current" {% if request.GET.bucket == 'current' %}selected{% endif %}>Current</option>
+        <option value="1_30" {% if request.GET.bucket == '1_30' %}selected{% endif %}>1-30 days</option>
+        <option value="31_60" {% if request.GET.bucket == '31_60' %}selected{% endif %}>31-60 days</option>
+        <option value="61_90" {% if request.GET.bucket == '61_90' %}selected{% endif %}>61-90 days</option>
+        <option value="90_plus" {% if request.GET.bucket == '90_plus' %}selected{% endif %}>90+ days</option>
+    </select>
+    <button type="submit" class="r-btn">Apply</button>
+</form>
+
+<section class="r-panel">
+    <div class="r-panel-head"><span><div class="r-panel-title">Total outstanding</div></span>
+        <span class="r-panel-aside"><div class="v">Rs {{ total_outstanding|floatformat:0 }}</div></span></div>
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Booking</th><th>Client</th><th>Outstanding</th><th>Next due</th><th>Days late</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td class="r-cell-title">{{ r.booking.package_name|default:r.booking.get_package_type_display }}</td>
+                    <td>{{ r.booking.client_or_company_name }}</td>
+                    <td class="r-cell-title">Rs {{ r.outstanding|floatformat:0 }}</td>
+                    <td>{% if r.due %}{{ r.due.label }} &middot; {{ r.due.due_date|date:"j M Y" }}{% else %}—{% endif %}</td>
+                    <td>{% if r.days_late > 0 %}<span class="r-alert danger">{{ r.days_late }} days</span>{% else %}<span class="r-alert ok">On time</span>{% endif %}</td>
+                    <td><span class="r-status st-{% if r.status == 'overdue' %}high{% elif r.status == 'partial' %}pending{% else %}low{% endif %}">{{ r.status|title }}</span></td>
+                    <td><div class="r-row-actions"><a href="{% url 'booking_finance_detail' r.booking.pk %}">Manage</a></div></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="r-empty"><div class="t">No outstanding balances</div>Every active booking is fully paid.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

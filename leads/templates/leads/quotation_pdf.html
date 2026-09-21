@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page { size: A4; margin: 2cm; }
+    body { font-family: Arial, sans-serif; color: #222; font-size: 13px; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0d7377; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h1 { color: #0d7377; margin: 0; font-size: 22px; }
+    .header .doc-title { text-align: right; }
+    .header .doc-title h2 { margin: 0; font-size: 20px; color: #333; }
+    .meta { margin-bottom: 20px; }
+    .meta table { width: 100%; }
+    .meta td { padding: 3px 0; }
+    table.items { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    table.items th { background: #0d7377; color: #fff; padding: 8px; text-align: left; font-size: 12px; }
+    table.items td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+    table.items tfoot td { font-weight: bold; font-size: 14px; border-top: 2px solid #0d7377; }
+    .section-title { font-size: 14px; font-weight: bold; color: #0d7377; margin-top: 20px; margin-bottom: 6px; }
+    .footer { margin-top: 40px; font-size: 11px; color: #777; border-top: 1px solid #ddd; padding-top: 10px; }
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <div class="doc-title">
+            <h2>Quotation #{{ quotation.pk }}</h2>
+            <div>Date: {{ quotation.created_at|date:"d M Y" }}</div>
+            {% if quotation.valid_until %}<div>Valid until: {{ quotation.valid_until|date:"d M Y" }}</div>{% endif %}
+        </div>
+    </div>
+
+    <div class="meta">
+        <div class="section-title">{{ quotation.title }}</div>
+        <table>
+            {% if quotation.company %}<tr><td><strong>Company:</strong></td><td>{{ quotation.company.name }}</td></tr>{% endif %}
+            {% if quotation.contact %}<tr><td><strong>Contact:</strong></td><td>{{ quotation.contact.get_full_name }}</td></tr>{% endif %}
+            {% if quotation.lead %}<tr><td><strong>Client:</strong></td><td>{{ quotation.lead.name }}</td></tr>{% endif %}
+            <tr><td><strong>Status:</strong></td><td>{{ quotation.get_status_display }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section-title">Cost Breakdown</div>
+    <table class="items">
+        <thead>
+            <tr><th>Type</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.get_item_type_display }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_price }}</td>
+                <td>{{ item.total_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr><td colspan="4">Grand Total</td><td>{{ grand_total }}</td></tr>
+        </tfoot>
+    </table>
+
+    {% if quotation.notes %}
+    <div class="section-title">Notes</div>
+    <p>{{ quotation.notes }}</p>
+    {% endif %}
+
+    {% if quotation.terms %}
+    <div class="section-title">Terms &amp; Conditions</div>
+    <p>{{ quotation.terms }}</p>
+    {% endif %}
+
+    <div class="footer">
+        This is a system-generated quotation from {{ company_name }}. Prices are subject to availability at time of booking.
+    </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ title }} - Travel CRM{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ title }}</h1>
+<div class="form-card">
+    <div class="form-card-header"><h2>{{ title }}</h2></div>
+    <div class="form-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Company <span class="required">*</span></label>
+                    <select name="company" class="form-control" required>
+                        <option value="">-- Select Corporate Account --</option>
+                        {% for c in companies %}
+                        <option value="{{ c.pk }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Employee</label>
+                    <select name="employee" class="form-control">
+                        <option value="">-- Select --</option>
+                        {% for e in contacts %}
+                        <option value="{{ e.pk }}">{{ e.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Purpose</label>
+                    <input type="text" name="purpose" class="form-control" placeholder="e.g. Client meeting, conference">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Destination</label>
+                    <input type="text" name="destination" class="form-control">
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Travel Date</label>
+                    <input type="date" name="travel_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Return Date</label>
+                    <input type="date" name="return_date" class="form-control">
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Estimated Cost</label>
+                    <input type="number" step="0.01" name="estimated_cost" class="form-control" value="0">
+                </div>
+                <div class="form-group" style="display:flex; align-items:flex-end;">
+                    <label class="field-label" style="margin:0;"><input type="checkbox" name="corporate_rate_applied" checked style="margin-right:8px;">Apply Corporate Rate</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Notes</label>
+                <textarea name="notes" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'corporate_request_list' %}" style="margin-right:12px; color:#666;">Cancel</a>
+                <button type="submit" class="btn">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

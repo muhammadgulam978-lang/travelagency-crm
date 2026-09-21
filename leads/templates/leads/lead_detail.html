@@ -1,0 +1,413 @@
+{% extends 'leads/base.html' %}
+{% load custom_filters %}
+{% block title %}{{ lead.name }} - Lead CRM{% endblock %}
+{% block content %}
+{% include 'partials/call_sidebar.html' with lead=lead google_connected=google_connected %}
+{% if lead.is_duplicate %}
+
+<div class="alert alert-error" style="display:flex; align-items:center; gap:12px;">
+    ⚠️ <div>
+        This lead is flagged as a possible duplicate.
+        {% if lead.duplicate_of %}
+        <a href="{% url 'lead_detail' lead.duplicate_of.pk %}" style="font-weight:700;">
+            View original lead →
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+<h1 class="page-title">{{ lead.name }} <span class="pill pill-{{ lead.status }}">{{ lead.get_status_display }}</span></h1>
+
+<div class="card">
+    <h2 class="section-heading">Lead Details</h2>
+    <table>
+        <tr><td><strong>Contact Number</strong></td><td>{{ lead.contact_number }}</td></tr>
+        <tr><td><strong>Email</strong></td><td>{{ lead.email|default:"-" }}</td></tr>
+        <tr><td><strong>Source</strong></td><td>{{ lead.get_lead_source_display }}</td></tr>
+        <tr><td><strong>Country / City</strong></td><td>{{ lead.country|default:"-" }} / {{ lead.city|default:"-" }}</td></tr>
+        <tr><td><strong>Address</strong></td><td>{{ lead.address|default:"-" }}</td></tr>
+        <tr><td><strong>Quotation</strong></td><td>{{ lead.quotation }}</td></tr>
+        <tr><td><strong>Detail</strong></td><td>{{ lead.detail|default:"-" }}</td></tr>
+        <tr><td><strong>SPO</strong></td><td>{{ lead.spo.name|default:"Unassigned" }}</td></tr>
+    </table>
+    <div class="lead-toolbar">
+
+        <!-- Status -->
+        <div class="toolbar-dropdown">
+            <button class="toolbar-btn status-btn">
+                Status: {{ lead.get_status_display }} ▼
+            </button>
+
+            <div class="toolbar-menu">
+                <a href="{% url 'update_lead_status' lead.pk 'positive' %}">
+                    ✅ Positive
+                </a>
+
+                <a href="{% url 'update_lead_status' lead.pk 'quotation' %}">
+                    📄 Quotation
+                </a>
+
+                <a href="{% url 'update_lead_status' lead.pk 'converted' %}">
+                    🎉 Converted
+                </a>
+
+                <a href="{% url 'update_lead_status' lead.pk 'lost' %}">
+                    ❌ Lost
+                </a>
+            </div>
+        </div>
+
+        <!-- AI -->
+        <div class="toolbar-dropdown">
+            <button class="toolbar-btn">
+                🤖 AI Tools ▼
+            </button>
+
+            <div class="toolbar-menu">
+                <a href="{% url 'score_lead' lead.pk %}">
+                    AI Score
+                </a>
+
+                <a href="{% url 'closing_probability' lead.pk %}">
+                    Close Probability
+                </a>
+
+                <a href="{% url 'ai_followup_message' lead.pk %}">
+                    AI Message
+                </a>
+
+                <a href="{% url 'churn_risk' lead.pk %}">
+                    Churn Risk
+                </a>
+
+                <a href="{% url 'upsell_recommendations' lead.pk %}">
+                    Upsell Ideas
+                </a>
+            </div>
+        </div>
+
+        <!-- Customer Insights -->
+        <div class="toolbar-dropdown">
+            <button class="toolbar-btn">
+                📊 Customer Insights ▼
+            </button>
+
+            <div class="toolbar-menu">
+                <a href="{% url 'lifetime_value' lead.pk %}">
+                    Lifetime Value
+                </a>
+
+                <a href="{% url 'customer_360' lead.pk %}">
+                    360° View
+                </a>
+            </div>
+        </div>
+
+        <!-- Proposal -->
+        <a class="toolbar-btn"
+        href="{% url 'proposal_writer_lead' lead.pk %}">
+            📝 Write Proposal
+        </a>
+
+    </div>
+</div>
+
+<div class="card">
+    <h2 class="section-heading">AI Lead Score</h2>
+    {% if lead.ai_score_updated %}
+    <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+        <div style="text-align:center;">
+            <div style="font-size:48px; font-weight:800;
+                color:{% if lead.ai_score >= 80 %}var(--green)
+                {% elif lead.ai_score >= 60 %}#2196f3
+                {% elif lead.ai_score >= 40 %}var(--orange)
+                {% else %}var(--red){% endif %};">
+                {{ lead.ai_score }}
+            </div>
+            <div style="font-size:13px; color:var(--text-muted);">out of 100</div>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:15px; margin-bottom:8px;">{{ lead.ai_score_reason }}</div>
+            <div style="font-size:12px; color:var(--text-muted);">
+                Last scored: {{ lead.ai_score_updated|date:"d M Y, h:i A" }}
+            </div>
+            <!-- progress bar -->
+            <div class="progress-bar-wrap" style="margin-top:10px;">
+                <div class="progress-bar-fill
+                    {% if lead.ai_score >= 80 %}done
+                    {% elif lead.ai_score < 40 %}warning{% endif %}"
+                    style="width:{{ lead.ai_score }}%">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        No score yet.
+        <a href="{% url 'score_lead' lead.pk %}" class="btn btn-small" style="margin-left:12px;">
+            🤖 Score This Lead
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 class="section-heading" style="margin:0;">🤖 Next Best Action</h2>
+        <a href="{% url 'next_action' lead.pk %}" class="btn btn-small">Refresh</a>
+    </div>
+
+    {% if next_action %}
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+        <div style="flex:1; background:#f3f4f8; border-radius:8px; padding:16px;">
+            <div style="font-size:18px; font-weight:700; margin-bottom:8px;">
+                {{ next_action.action }}
+            </div>
+            <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">
+                {{ next_action.reason }}
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <span class="pill
+                    {% if next_action.priority == 'High' %}pill-lost
+                    {% elif next_action.priority == 'Medium' %}pill-quotation
+                    {% else %}pill-new{% endif %}">
+                    {{ next_action.priority }} Priority
+                </span>
+                <span class="pill pill-positive" style="background:var(--teal);">
+                    ⏰ {{ next_action.deadline }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <a href="{% url 'next_action' lead.pk %}" class="btn btn-small">
+            🤖 Get AI Recommendation
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 class="section-heading" style="margin:0;">📊 Deal Closing Probability</h2>
+        <a href="{% url 'closing_probability' lead.pk %}">Refresh</a>
+    </div>
+    {% if lead.closing_probability_updated %}
+    <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+        <div style="text-align:center;">
+            <div style="font-size:48px; font-weight:800;
+                color:{% if lead.closing_probability >= 70 %}var(--green)
+                {% elif lead.closing_probability >= 40 %}var(--orange)
+                {% else %}var(--red){% endif %};">
+                {{ lead.closing_probability }}%
+            </div>
+            <div style="font-size:13px; color:var(--text-muted);">closing chance</div>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:15px; margin-bottom:8px;">
+                {{ lead.closing_probability_reason }}
+            </div>
+            <div class="progress-bar-wrap" style="margin-top:10px;">
+                <div class="progress-bar-fill
+                    {% if lead.closing_probability >= 70 %}done
+                    {% elif lead.closing_probability < 30 %}warning{% endif %}"
+                    style="width:{{ lead.closing_probability }}%">
+                </div>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">
+                Last updated: {{ lead.closing_probability_updated|date:"d M Y, h:i A" }}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <a href="{% url 'closing_probability' lead.pk %}" class="btn btn-small">
+            📊 Predict Closing Probability
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if lead.churn_risk %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 class="section-heading" style="margin:0;">⚠️ Churn Risk</h2>
+        <a href="{% url 'churn_risk' lead.pk %}" class="btn btn-small">Refresh</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <span class="pill
+            {% if lead.churn_risk == 'High' %}pill-lost
+            {% elif lead.churn_risk == 'Medium' %}pill-quotation
+            {% else %}pill-converted{% endif %}"
+            style="font-size:16px; padding:8px 20px;">
+            {{ lead.churn_risk }} Risk
+        </span>
+        <div>
+            <div style="font-size:14px; color:var(--text-dark);">
+                {{ lead.churn_risk_reason }}
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+                Updated: {{ lead.churn_risk_updated|date:"d M Y, h:i A" }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if lead.lifetime_value_updated %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 class="section-heading" style="margin:0;">💎 Customer Lifetime Value</h2>
+        <a href="{% url 'lifetime_value' lead.pk %}" class="btn btn-small">Refresh</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+        <div style="text-align:center;">
+            <div style="font-size:36px; font-weight:800; color:var(--teal-dark);">
+                {{ lead.lifetime_value }}
+            </div>
+            <div style="font-size:13px; color:var(--text-muted);">estimated LTV</div>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:14px; color:var(--text-dark); margin-bottom:8px;">
+                {{ lead.lifetime_value_reason }}
+            </div>
+            <div style="font-size:12px; color:var(--text-muted);">
+                Updated: {{ lead.lifetime_value_updated|date:"d M Y, h:i A" }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2 class="section-heading">Follow Ups</h2>
+    <table>
+        <thead><tr><th>Date</th><th>Status</th><th>Notes</th><th>Action</th></tr></thead>
+        <tbody>
+            {% for f in followups %}
+            <tr>
+                <td>{{ f.follow_up_date|date:"d M Y, h:i A" }}</td>
+                <td><span class="pill {% if f.status == 'done' %}pill-converted{% else %}pill-quotation{% endif %}">{{ f.get_status_display }}</span></td>
+                <td>{{ f.notes|default:"-" }}</td>
+                <td>{% if f.status == 'pending' %}<div class="action-links"><a href="{% url 'followup_done' f.pk %}">Mark Done</a><a href="{% url 'ai_assign_lead' lead.pk %}" >🤖 AI Assign</a></div>{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty-state">No follow ups scheduled.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3 style="margin-top:24px;">Schedule a Follow Up</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-group">
+                <label class="field-label">Date &amp; Time</label>
+                {{ followup_form.follow_up_date }}
+            </div>
+            <div class="form-group">
+                <label class="field-label">Notes</label>
+                {{ followup_form.notes }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-small">Add Follow Up</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2 class="section-heading">Payments</h2>
+    <table>
+        <thead><tr><th>Type</th><th>Amount</th><th>Date</th><th>Notes</th></tr></thead>
+        <tbody>
+            {% for p in lead.payments.all %}
+            <tr>
+                <td><span class="pill {% if p.payment_type == 'full' %}pill-converted{% else %}pill-lost{% endif %}">{{ p.get_payment_type_display }}</span></td>
+                <td>{{ p.amount }}</td>
+                <td>{{ p.date|date:"d M Y" }}</td>
+                <td>{{ p.notes|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty-state">No payments recorded.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3 style="margin-top:24px;">Record a Payment</h3>
+    <form method="post" action="{% url 'add_payment' lead.pk %}">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group">
+                <label class="field-label">Type</label>
+                <select name="payment_type" class="form-control">
+                    <option value="advance">Advance</option>
+                    <option value="full">Full</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Amount</label>
+                <input type="number" name="amount" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Notes</label>
+                <input type="text" name="notes" class="form-control" placeholder="Optional">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-small">Add Payment</button>
+    </form>
+</div>
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 class="section-heading" style="margin:0;">Communication History</h2>
+        <a href="{% url 'communication_create' %}?lead={{ lead.pk }}&next={{ request.path }}"
+           class="btn btn-small">+ Log Communication</a>
+    </div>
+    {% if lead.communications.all %}
+    <div class="timeline">
+        {% for log in lead.communications.all %}
+        <div class="timeline-item">
+            <div class="timeline-dot {{ log.comm_type }}"></div>
+            <div class="timeline-card">
+                <div class="timeline-card-header">
+                    <span class="comm-type-badge comm-type-{{ log.comm_type }}">
+                        {{ log.get_comm_type_display }}
+                    </span>
+                    <span class="timeline-card-meta">
+                        {{ log.created_at|date:"d M Y, h:i A" }}
+                        {% if log.created_by %}· {{ log.created_by.username }}{% endif %}
+                    </span>
+                </div>
+                {% if log.subject %}
+                <div class="timeline-card-subject">{{ log.subject }}</div>
+                {% endif %}
+                <div class="timeline-card-body">{{ log.body }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">No communication history for this lead.</div>
+    {% endif %}
+</div>
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 class="section-heading" style="margin:0;">Documents</h2>
+        <a href="{% url 'document_upload' %}?lead={{ lead.pk }}" class="btn btn-small">&#11014; Upload</a>
+    </div>
+    {% for doc in lead.documents.all %}
+    <div class="doc-row">
+        <div class="doc-icon">&#128196;</div>
+        <div class="doc-info">
+            <div class="doc-title">{{ doc.title }}</div>
+            <div class="doc-meta">{{ doc.get_doc_type_display }} · {{ doc.filesize }} · {{ doc.created_at|date:"d M Y" }}</div>
+        </div>
+        <div class="action-links">
+            <a href="{{ doc.file.url }}" target="_blank">&#11015; Download</a>
+            <a href="{% url 'document_delete' doc.pk %}" onclick="return confirm('Delete?')">Delete</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">No documents attached.</div>
+    {% endfor %}
+</div>
+{% endblock %}

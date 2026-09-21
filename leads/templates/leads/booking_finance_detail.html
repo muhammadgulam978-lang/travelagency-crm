@@ -1,0 +1,119 @@
+{% extends 'leads/base.html' %}
+{% block title %}Finance — {{ booking }}{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>{{ booking.package_name|default:booking.get_package_type_display }}</h1>
+        <p>{{ booking.client_or_company_name }} &middot; {{ booking.no_of_pax }} pax</p></div>
+    <div class="r-page-actions"><a href="{% url 'profit_report' %}" class="r-btn ghost">Profit report</a></div>
+</div>
+
+<div class="r-kpi-grid">
+    <div class="r-kpi"><span class="r-kpi-icon tone-violet"></span><span class="r-kpi-body"><span class="r-kpi-label">Total amount</span><span class="r-kpi-value">Rs {{ booking.total_amount|floatformat:0 }}</span></span></div>
+    <div class="r-kpi"><span class="r-kpi-icon tone-emerald"></span><span class="r-kpi-body"><span class="r-kpi-label">Collected</span><span class="r-kpi-value">Rs {{ booking.amount_collected|floatformat:0 }}</span></span></div>
+    <div class="r-kpi"><span class="r-kpi-icon tone-rose"></span><span class="r-kpi-body"><span class="r-kpi-label">Outstanding</span><span class="r-kpi-value">Rs {{ booking.outstanding_balance|floatformat:0 }}</span></span></div>
+    <div class="r-kpi"><span class="r-kpi-icon tone-amber"></span><span class="r-kpi-body"><span class="r-kpi-label">Status</span><span class="r-kpi-value" style="text-transform:capitalize;">{{ booking.payment_status }}</span></span></div>
+</div>
+
+<div class="r-grid r-grid-2-1">
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Payment schedule</div></span></div>
+        <div class="r-table-wrap">
+            <table class="r-table">
+                <thead><tr><th>Installment</th><th>Amount</th><th>Due</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for i in installments %}
+                    <tr>
+                        <td class="r-cell-title">{{ i.label }}</td>
+                        <td>Rs {{ i.amount|floatformat:0 }}</td>
+                        <td>{{ i.due_date|date:"j M Y" }}{% if i.days_overdue > 0 %}<div><span class="r-alert danger">{{ i.days_overdue }}d late</span></div>{% endif %}</td>
+                        <td>Rs {{ i.amount_paid|floatformat:0 }}</td>
+                        <td>Rs {{ i.balance|floatformat:0 }}</td>
+                        <td><span class="r-status st-{% if i.status == 'paid' %}confirmed{% elif i.status == 'overdue' %}high{% elif i.status == 'partial' %}pending{% else %}low{% endif %}">{{ i.get_status_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="r-empty"><div class="t">No installments yet</div>Add a schedule below to start tracking due dates.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="r-panel-body">
+            <form method="post" action="{% url 'booking_installment_add' booking.pk %}" class="r-inline-form">
+                {% csrf_token %}
+                <div><label>Label</label>{{ installment_form.label }}</div>
+                <div><label>Amount</label>{{ installment_form.amount }}</div>
+                <div><label>Due date</label>{{ installment_form.due_date }}</div>
+                <button type="submit" class="r-btn" style="align-self:flex-end;">Add installment</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Record a payment</div></span></div>
+        <div class="r-panel-body">
+            <form method="post" action="{% url 'booking_transaction_add' booking.pk %}">
+                {% csrf_token %}
+                {{ transaction_form.as_p }}
+                <button type="submit" class="r-btn">Record payment &amp; issue receipt</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<section class="r-panel">
+    <div class="r-panel-head"><span><div class="r-panel-title">Transactions</div></span></div>
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Receipt</th><th>Type</th><th>Amount</th><th>Method</th><th>Reference</th><th>Date</th><th></th></tr></thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td class="r-cell-title">{{ t.receipt_number }}</td>
+                    <td><span class="r-stage {% if t.transaction_type == 'refund' %}stage-lost{% else %}stage-converted{% endif %}">{{ t.get_transaction_type_display }}</span></td>
+                    <td>Rs {{ t.amount|floatformat:0 }}</td>
+                    <td>{{ t.get_payment_method_display }}</td>
+                    <td>{{ t.reference_number|default:"—" }}</td>
+                    <td>{{ t.transaction_date|date:"j M Y" }}</td>
+                    <td><div class="r-row-actions"><a href="{% url 'receipt_view' t.pk %}" target="_blank">Receipt</a></div></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="r-empty"><div class="t">No transactions yet</div>Record the first payment above.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="r-grid r-grid-2-1">
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Refund / cancellation requests</div></span></div>
+        <div class="r-table-wrap">
+            <table class="r-table">
+                <thead><tr><th>Amount</th><th>Reason</th><th>Status</th><th>Requested by</th></tr></thead>
+                <tbody>
+                    {% for r in refunds %}
+                    <tr>
+                        <td class="r-cell-title">Rs {{ r.amount|floatformat:0 }}</td>
+                        <td>{{ r.reason|truncatechars:40 }}</td>
+                        <td><span class="r-status st-{% if r.status == 'completed' %}confirmed{% elif r.status == 'rejected' %}cancelled{% else %}pending{% endif %}">{{ r.get_status_display }}</span></td>
+                        <td>{{ r.requested_by.get_full_name|default:r.requested_by.username|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4"><div class="r-empty"><div class="t">No refund requests</div>Submit one below if a cancellation needs money returned.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head"><span><div class="r-panel-title">Request a refund</div></span></div>
+        <div class="r-panel-body">
+            <form method="post" action="{% url 'refund_request_create' booking.pk %}">
+                {% csrf_token %}
+                {{ refund_form.as_p }}
+                <button type="submit" class="r-btn ghost">Submit for approval</button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

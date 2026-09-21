@@ -1,0 +1,48 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ flight.flight_no }} — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>{{ flight.airline }} {{ flight.flight_no }}</h1>
+        <p>{{ flight.get_leg_display }} &middot; {{ flight.origin }} &rarr; {{ flight.destination }} &middot; {{ flight.departure_date|date:"j M Y" }}</p></div>
+    <div class="r-page-actions"><a href="{% url 'flight_edit' flight.pk %}" class="r-btn ghost">Edit flight</a></div>
+</div>
+
+<section class="r-panel" style="margin-bottom:14px;">
+    <div class="r-panel-head"><span><div class="r-panel-title">Assign passengers</div>
+        <div class="r-panel-sub">{% if flight.group %}Showing {{ flight.group.name }} members{% elif flight.booking %}Showing this booking's pilgrims{% else %}Showing all pilgrims{% endif %}</div></span></div>
+    <div class="r-panel-body">
+        <form method="post" action="{% url 'flight_assign_passenger' flight.pk %}" class="r-inline-form" style="margin-bottom:14px;">
+            {% csrf_token %}
+            <select name="pilgrim" class="form-control" required>
+                <option value="">Select pilgrim…</option>
+                {% for p in candidates %}<option value="{{ p.pk }}">{{ p.full_name }}</option>{% endfor %}
+            </select>
+            <input type="text" name="seat_number" placeholder="Seat no.">
+            <input type="text" name="ticket_number" placeholder="Ticket no.">
+            <button type="submit" class="r-btn">Assign</button>
+        </form>
+    </div>
+</section>
+
+<section class="r-panel">
+    <div class="r-panel-head"><span><div class="r-panel-title">Passengers</div></span></div>
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Pilgrim</th><th>Seat</th><th>Ticket no.</th><th>Baggage</th><th></th></tr></thead>
+            <tbody>
+                {% for pax in passengers %}
+                <tr>
+                    <td><a href="{% url 'pilgrim_detail' pax.pilgrim.pk %}" class="r-cell-title">{{ pax.pilgrim.full_name }}</a></td>
+                    <td>{{ pax.seat_number|default:"—" }}</td>
+                    <td>{{ pax.ticket_number|default:"—" }}</td>
+                    <td>{{ pax.baggage|default:"—" }}</td>
+                    <td><div class="r-row-actions"><a href="{% url 'flight_remove_passenger' flight.pk pax.pilgrim.pk %}" class="danger" onclick="return confirm('Remove this passenger?');">Remove</a></div></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5"><div class="r-empty"><div class="t">No passengers assigned</div>Assign a pilgrim above.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

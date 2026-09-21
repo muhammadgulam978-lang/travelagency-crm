@@ -1,0 +1,127 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ title }} - Holiday Express Travel CRM{% endblock %}
+{% block content %}
+<div class="form-card">
+    <div class="form-card-header">
+        <h2>{{ title }}</h2>
+    </div>
+    <div class="form-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Applicant Name <span class="required">*</span></label>
+                    <input type="text" name="applicant_name" class="form-control" required
+                           value="{{ application.applicant_name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Passport Number</label>
+                    <input type="text" name="passport_number" class="form-control"
+                           value="{{ application.passport_number|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Linked Lead</label>
+                    <select name="lead" class="form-control">
+                        <option value="">-- None --</option>
+                        {% for lead in leads %}
+                        <option value="{{ lead.pk }}" {% if application.lead_id == lead.pk %}selected{% endif %}>
+                            {{ lead.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Country <span class="required">*</span></label>
+                    <input type="text" name="country" class="form-control" required
+                           value="{{ application.country|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Visa Category</label>
+                    <select name="visa_category" class="form-control">
+                        {% for value, label in category_choices %}
+                        <option value="{{ value }}" {% if application.visa_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Application Type</label>
+                    <input type="text" name="application_type" class="form-control"
+                           placeholder="e.g. Single Entry, Multiple Entry"
+                           value="{{ application.application_type|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Embassy Fee</label>
+                    <input type="number" step="0.01" name="embassy_fee" class="form-control"
+                           value="{{ application.embassy_fee|default:0 }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Service Fee</label>
+                    <input type="number" step="0.01" name="service_fee" class="form-control"
+                           value="{{ application.service_fee|default:0 }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Processing Time (days)</label>
+                    <input type="number" name="processing_time_days" class="form-control"
+                           value="{{ application.processing_time_days|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Status</label>
+                    <select name="status" class="form-control">
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Assigned Visa Agent</label>
+                    <select name="assigned_agent" class="form-control">
+                        <option value="">-- Unassigned --</option>
+                        {% for agent in agents %}
+                        <option value="{{ agent.pk }}" {% if application.assigned_agent_id == agent.pk %}selected{% endif %}>
+                            {{ agent.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="field-label">Appointment Date/Time</label>
+                    <input type="datetime-local" name="appointment_datetime" class="form-control"
+                           value="{{ application.appointment_datetime|date:'Y-m-d\TH:i'|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Submission Date</label>
+                    <input type="date" name="submission_date" class="form-control"
+                           value="{{ application.submission_date|date:'Y-m-d'|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Expected Decision Date</label>
+                    <input type="date" name="expected_decision_date" class="form-control"
+                           value="{{ application.expected_decision_date|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:22px;">
+                <label class="field-label">Notes</label>
+                <textarea name="notes" rows="4" class="form-control">{{ application.notes|default:'' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

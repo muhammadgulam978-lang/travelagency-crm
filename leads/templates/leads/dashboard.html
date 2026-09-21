@@ -1,0 +1,391 @@
+{% extends 'leads/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Dashboard — Raabta360{% endblock %}
+
+{% block content %}
+{# ---------------------------------------------------------------- HERO #}
+<div class="r-hero">
+    <div class="r-hero-text">
+        <h1>Good {{ greeting }}, {{ user.first_name|default:user.username|title }}</h1>
+        <p>Here's what's happening with your Hajj, Umrah &amp; travel business today.</p>
+    </div>
+    <div class="r-hero-quote">Facilitating your journey to the House of Allah</div>
+    <div class="r-hero-date">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        {{ today|date:"M j, Y" }}
+    </div>
+</div>
+
+{# ---------------------------------------------------------------- KPIs #}
+<div class="r-kpi-grid">
+    {% for k in kpis %}
+    <a class="r-kpi" href="{% url k.url_name %}">
+        <span class="r-kpi-icon tone-{{ k.tone }}">
+            {% if k.icon == 'revenue' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+            {% elif k.icon == 'users' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/></svg>
+            {% elif k.icon == 'ticket' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 5v14"/></svg>
+            {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+            {% endif %}
+        </span>
+        <span class="r-kpi-body">
+            <span class="r-kpi-label">{{ k.label }}</span>
+            <span class="r-kpi-value">{{ k.value }}</span>
+            <span class="r-kpi-delta">
+                {% if k.delta >= 0 %}
+                <span class="up">&#9650; {{ k.delta }}%</span>
+                {% else %}
+                <span class="down">&#9660; {{ k.delta }}%</span>
+                {% endif %}
+                <span class="vs">vs last month</span>
+            </span>
+        </span>
+        <span class="r-kpi-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg></span>
+    </a>
+    {% endfor %}
+</div>
+
+{# ------------------------------------------------- TRAVEL OPS STRIP #}
+<div class="r-ops-grid">
+    {% for o in ops_strip %}
+    <div class="r-ops">
+        <span class="r-ops-icon tone-{{ o.tone }}">
+            {% if o.icon == 'kaaba' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5 12 4l8 4.5V17l-8 4.5L4 17z"/><path d="M4 8.5 12 13l8-4.5M12 13v8.5"/></svg>
+            {% elif o.icon == 'mosque' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.5 2 4 3.6 4 5.5S14.2 12 12 12s-4-1.6-4-3.5S9.5 5 12 3z"/><path d="M4 21v-6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v6M4 21h16M10 21v-3a2 2 0 0 1 4 0v3"/></svg>
+            {% elif o.icon == 'passport' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+            {% elif o.icon == 'card' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+            {% elif o.icon == 'plane' %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.1 2.1 0 0 0-3-3L13 8 4.8 6.2a.5.5 0 0 0-.5.8L8 11l-2 2-2.3-.6a.5.5 0 0 0-.5.8L6 16l2.8 2.8.8-.5a.5.5 0 0 0-.6-2.3l2-2 3.2 3.7a.5.5 0 0 0 .8-.5z"/></svg>
+            {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            {% endif %}
+        </span>
+        <span>
+            <span class="r-ops-label">{{ o.label }}</span>
+            <div class="r-ops-value">{{ o.value }}</div>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+
+{# ------------------------------- REVENUE + DISTRIBUTION + AI PANEL #}
+<div class="r-grid r-grid-2-1-1">
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg></span>
+            <span>
+                <div class="r-panel-title">Revenue Overview</div>
+                <div class="r-panel-sub">Monthly revenue for the last 6 months</div>
+            </span>
+            <span class="r-panel-aside">
+                <div class="k">Total Revenue</div>
+                <div class="v">{{ total_revenue_display }}</div>
+                <div class="r-kpi-delta" style="justify-content:flex-end;">
+                    {% if revenue_delta >= 0 %}<span class="up">&#9650; {{ revenue_delta }}%</span>
+                    {% else %}<span class="down">&#9660; {{ revenue_delta }}%</span>{% endif %}
+                </div>
+            </span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-chart-wrap"><canvas id="revenueChart"></canvas></div>
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 5v14"/></svg></span>
+            <span><div class="r-panel-title">Booking Distribution</div></span>
+        </div>
+        <div class="r-panel-body">
+            <div class="r-donut-row">
+                <div class="r-donut-canvas">
+                    <canvas id="distChart"></canvas>
+                    <div class="r-donut-center">
+                        <div class="n">{{ total_bookings }}</div>
+                        <div class="l">Total Bookings</div>
+                    </div>
+                </div>
+                <div class="r-legend">
+                    {% for d in dist_rows %}
+                    <div class="r-legend-row">
+                        <span class="r-legend-dot" data-dist="{{ forloop.counter0 }}"></span>
+                        <span class="r-legend-name">{{ d.label }}</span>
+                        <span class="r-legend-val">{{ d.count }}</span>
+                        <span class="r-legend-pct">{{ d.pct }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="r-panel r-ai">
+        <div class="r-ai-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 4.6L18.5 9l-4.6 1.4L12 15l-1.9-4.6L5.5 9l4.6-1.4z"/><path d="M19 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z"/></svg>
+            <span>
+                <div class="t">AI Lead Intelligence</div>
+                <div class="s">{{ hot_count }} hot lead{{ hot_count|pluralize }} need attention today</div>
+            </span>
+            <a href="{% url 'all_leads' %}?score=high" class="r-link">View all</a>
+        </div>
+        <div class="r-ai-body">
+            {% for a in ai_leads %}
+            <a class="r-ai-row" href="{% url 'lead_detail' a.obj.pk %}">
+                <span class="r-ai-info">
+                    <span class="r-ai-name">
+                        {{ a.obj.name }}
+                        <span class="r-chip chip-{{ a.band|lower|slugify }}">{{ a.band }}</span>
+                    </span>
+                    <span class="r-ai-meta">{{ a.trip }}{% if a.budget %} &middot; Rs {{ a.budget|floatformat:0 }}{% endif %} &middot; {{ a.stage }}</span>
+                    {% if a.next_followup %}
+                    <span class="r-ai-next">Follow-up: {{ a.next_followup|date:"M j, g:i A" }}</span>
+                    {% endif %}
+                </span>
+                <span class="r-ai-score">{{ a.obj.ai_score }}</span>
+            </a>
+            {% empty %}
+            <div class="r-empty">
+                <div class="t">No scored leads yet</div>
+                Run AI scoring on your leads to see intent ranking here.
+            </div>
+            {% endfor %}
+        </div>
+        <a class="r-ai-cta" href="{% url 'all_leads' %}">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span>
+            <span>
+                <div class="t">AI Assistant</div>
+                <div class="s">Find hot leads, create quotations, get insights</div>
+            </span>
+        </a>
+    </section>
+</div>
+
+{# -------------------------------------- DEPARTURES + FOLLOW-UPS + QA #}
+<div class="r-grid r-grid-2-1-1">
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.1 2.1 0 0 0-3-3L13 8 4.8 6.2a.5.5 0 0 0-.5.8L8 11l-2 2-2.3-.6a.5.5 0 0 0-.5.8L6 16l2.8 2.8.8-.5"/></svg></span>
+            <span><div class="r-panel-title">Upcoming Departures</div></span>
+            <a href="{% url 'booking_list' %}" class="r-link" style="margin-left:auto;">View all</a>
+        </div>
+        <div class="r-list">
+            {% for b in upcoming_rows %}
+            <div class="r-list-row">
+                <span class="r-date-block">
+                    <span class="d">{{ b.departure_date|date:"j" }}</span>
+                    <span class="m">{{ b.departure_date|date:"M"|upper }}</span>
+                </span>
+                <span class="r-list-main">
+                    <span class="r-list-title">{{ b.package_name|default:b.get_package_type_display }}{% if b.client_or_company_name != "—" %} &middot; {{ b.client_or_company_name }}{% endif %}</span>
+                    <span class="r-list-sub">{{ b.no_of_pax }} pilgrim{{ b.no_of_pax|pluralize }}{% if b.departure_airline %} &middot; {{ b.departure_airline }}{% endif %}{% if b.departure_flight_no %} {{ b.departure_flight_no }}{% endif %}</span>
+                </span>
+                <span class="r-status st-{{ b.booking_status }}">{{ b.get_booking_status_display }}</span>
+            </div>
+            {% empty %}
+            <div class="r-empty">
+                <div class="t">No departures scheduled</div>
+                Add a booking with a departure date to track it here.
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg></span>
+            <span>
+                <div class="r-panel-title">Today's Follow-ups</div>
+                {% if overdue_followups %}
+                <div class="r-panel-sub" style="color:var(--r-rose);font-weight:600;">{{ overdue_followups }} overdue</div>
+                {% endif %}
+            </span>
+            <a href="{% url 'followup_list' 'today' %}" class="r-link" style="margin-left:auto;">View all</a>
+        </div>
+        <div class="r-list">
+            {% for f in todays_followups %}
+            <div class="r-list-row">
+                <span class="r-time">{{ f.local_dt|date:"g:i A" }}</span>
+                <span class="r-list-main">
+                    <a class="r-list-title" href="{% url 'lead_detail' f.lead.pk %}">{{ f.lead.name }}</a>
+                    <span class="r-list-sub">{{ f.notes|default:f.lead.destination|default:"Follow-up"|truncatechars:38 }}</span>
+                </span>
+                <span class="r-status st-{{ f.priority|lower }}">{{ f.priority }}</span>
+                {% if f.lead.contact_number %}
+                <a class="r-icon-btn" href="tel:{{ f.lead.contact_number }}" title="Call">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+                </a>
+                <a class="r-icon-btn wa" href="https://wa.me/{{ f.lead.contact_number|cut:'+'|cut:' '|cut:'-' }}" target="_blank" rel="noopener" title="WhatsApp">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a12 12 0 0 1-5.7-5c-.4-.7-.9-1.6-.9-2.5s.5-1.4.7-1.6c.2-.2.4-.3.6-.3h.5c.2 0 .4 0 .6.4l.8 1.9c.1.2 0 .4-.1.5l-.4.5c-.1.2-.3.3-.1.6a8.9 8.9 0 0 0 3.7 3.2c.3.2.5.1.6 0l.7-.8c.2-.2.3-.2.6-.1l1.8.9c.3.1.4.2.4.4s0 .6-.3.9z"/></svg>
+                </a>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="r-empty">
+                <div class="t">Nothing scheduled for today</div>
+                Open a lead and schedule a follow-up to see it here.
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="r-panel">
+        <div class="r-panel-head">
+            <span class="r-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-9 12h7l-1 8 9-12h-7z"/></svg></span>
+            <span><div class="r-panel-title">Quick Actions</div></span>
+        </div>
+        <div class="r-qa-grid">
+            <a class="r-qa" href="{% url 'create_lead' %}">
+                <span class="ic tone-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span>
+                Add new lead
+            </a>
+            <a class="r-qa" href="{% url 'quotation_list' %}">
+                <span class="ic tone-sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h3"/></svg></span>
+                Create quotation
+            </a>
+            <a class="r-qa" href="{% url 'booking_create' %}">
+                <span class="ic tone-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 5v14"/></svg></span>
+                Add booking
+            </a>
+            <a class="r-qa" href="{% url 'document_list' %}">
+                <span class="ic tone-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5-5 5 5M12 5v12"/></svg></span>
+                Upload documents
+            </a>
+            <a class="r-qa" href="{% url 'bulk_whatsapp_sender' %}">
+                <span class="ic tone-emerald"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2z"/></svg></span>
+                Send WhatsApp
+            </a>
+            <a class="r-qa" href="{% url 'calendar_view' %}">
+                <span class="ic tone-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+                View calendar
+            </a>
+        </div>
+    </section>
+</div>
+
+{# ---------------------------------------------------------------- CHARTS #}
+<script>
+(function () {
+    if (typeof Chart === 'undefined') return;
+
+    Chart.defaults.font.family = "Inter, 'Segoe UI', Roboto, sans-serif";
+    Chart.defaults.font.size = 11.5;
+    Chart.defaults.color = '#7b7799';
+
+    var BRAND = '#6d4aff';
+    var DIST_COLORS = ['#6d4aff', '#8f74ff', '#b9a6ff', '#f5a623'];
+
+    document.querySelectorAll('.r-legend-dot[data-dist]').forEach(function (el) {
+        el.style.background = DIST_COLORS[parseInt(el.dataset.dist, 10) % DIST_COLORS.length];
+    });
+
+    function money(v) {
+        if (v >= 1e6) return 'Rs ' + (v / 1e6).toFixed(2) + 'M';
+        if (v >= 1e3) return 'Rs ' + Math.round(v / 1e3) + 'K';
+        return 'Rs ' + v;
+    }
+
+    /* ---- Revenue line ---- */
+    var rc = document.getElementById('revenueChart');
+    if (rc) {
+        var ctx = rc.getContext('2d');
+        var grad = ctx.createLinearGradient(0, 0, 0, 260);
+        grad.addColorStop(0, 'rgba(109,74,255,0.24)');
+        grad.addColorStop(1, 'rgba(109,74,255,0.01)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ rev_labels|safe }},
+                datasets: [{
+                    label: 'Revenue',
+                    data: {{ rev_values|safe }},
+                    borderColor: BRAND,
+                    borderWidth: 2.4,
+                    backgroundColor: grad,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 3.5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: BRAND,
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#211d47',
+                        padding: 11,
+                        cornerRadius: 9,
+                        displayColors: false,
+                        titleFont: { weight: '600' },
+                        callbacks: { label: function (c) { return money(c.parsed.y); } }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, border: { display: false } },
+                    y: {
+                        beginAtZero: true,
+                        border: { display: false },
+                        grid: { color: '#f0eff8' },
+                        ticks: {
+                            maxTicksLimit: 6,
+                            callback: function (v) {
+                                if (v >= 1e6) return (v / 1e6) + 'M';
+                                if (v >= 1e3) return (v / 1e3) + 'K';
+                                return v;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /* ---- Booking distribution donut ---- */
+    var dc = document.getElementById('distChart');
+    if (dc) {
+        new Chart(dc, {
+            type: 'doughnut',
+            data: {
+                labels: {{ dist_labels|safe }},
+                datasets: [{
+                    data: {{ dist_values|safe }},
+                    backgroundColor: DIST_COLORS,
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#211d47',
+                        padding: 10,
+                        cornerRadius: 9,
+                        displayColors: false
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

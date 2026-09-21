@@ -1,0 +1,59 @@
+{% extends 'leads/base.html' %}
+{% block title %}Packages - Lead CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">Packages</h1>
+    <div style="display:flex; gap:10px;">
+        <a href="{% url 'package_create' %}" class="btn">+ Add Package</a>
+        <a href="{% url 'package_trash' %}" class="btn" style="background:#e2413f; box-shadow:none;">Trash ({{ trash_count }})</a>
+    </div>
+</div>
+
+<div class="card filter-card">
+    <form method="get" class="filter-row">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="form-control" placeholder="Search by package name, code or maktab...">
+        <button type="submit" class="btn btn-small">Search</button>
+    </form>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Package Name</th>
+                <th>Code</th>
+                <th>Maktab</th>
+                <th>Days</th>
+                <th>Year</th>
+                <th>Created At</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for package in packages %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><strong>{{ package.package_name|default:"—" }}</strong></td>
+                <td>{{ package.package_code|default:"—" }}</td>
+                <td>{{ package.maktab|default:"—" }}</td>
+                <td>{{ package.days|default:"—" }}</td>
+                <td>{{ package.year }}</td>
+                <td>{{ package.created_at|date:"d M, Y" }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'package_edit' package.pk %}">Edit</a>
+                        <a href="{% url 'package_view' package.pk %}">View</a>
+                        <a href="{% url 'package_delete' package.pk %}" onclick="return confirm('Move this package to trash?');">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="empty-state">No packages yet. Click "+ Add Package" to create your first one.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,331 @@
+{% extends 'leads/base.html' %}
+{% block title %}Reports & Analytics - Lead CRM{% endblock %}
+{% block content %}
+
+<div class="dash-head">
+    <div>
+        <h1 class="page-title" style="margin-bottom:4px;">Reports &amp; Analytics</h1>
+        <p class="dash-subtitle">Leads, pipeline, revenue and team analytics in one place.</p>
+    </div>
+    <div class="live-pill"><span class="live-dot"></span> Live data</div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ total_leads }}</div><div class="kpi-label">Total Leads</div><div class="kpi-sub">{{ leads_this_month }} added this month</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ total_revenue }}</div><div class="kpi-label">Total Revenue</div><div class="kpi-sub">Advance {{ advance_revenue }} · Full {{ full_revenue }}</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ total_pipeline_value }}</div><div class="kpi-label">Pipeline Value</div><div class="kpi-sub">Won: {{ won_value }}</div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 3h12v6a6 6 0 0 1-12 0z"/><path d="M12 15v4M8 21h8"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ win_rate }}%</div><div class="kpi-label">Win Rate</div><div class="kpi-sub">{{ won_opps }} won of {{ total_opps }} opportunities</div></div>
+    </div>
+</div>
+
+<div class="charts-row charts-row-even">
+    <div class="card chart-card">
+        <div class="chart-card-head">
+            <div>
+                <h2 class="section-heading" style="margin-bottom:2px;">Leads by Status</h2>
+                <p class="chart-card-sub">Distribution across every lead stage</p>
+            </div>
+        </div>
+        <div class="chart-canvas-wrap donut-wrap" id="statusWrap">
+            <canvas id="statusChart"></canvas>
+            <div class="donut-center-overlay">
+                <div class="donut-center-value">{{ total_leads }}</div>
+                <div class="donut-center-label">Total</div>
+            </div>
+        </div>
+        <div class="donut-legend" id="statusLegend"></div>
+    </div>
+
+    <div class="card chart-card">
+        <div class="chart-card-head">
+            <div>
+                <h2 class="section-heading" style="margin-bottom:2px;">Leads by Source</h2>
+                <p class="chart-card-sub">Which channels bring in the most leads</p>
+            </div>
+        </div>
+        <div class="chart-canvas-wrap chart-canvas-wrap-lg" id="sourceWrap">
+            <canvas id="sourceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card chart-card">
+    <div class="chart-card-head">
+        <div>
+            <h2 class="section-heading" style="margin-bottom:2px;">Pipeline by Stage</h2>
+            <p class="chart-card-sub">Deal count and value at each stage</p>
+        </div>
+    </div>
+    <div class="chart-canvas-wrap chart-canvas-wrap-lg" id="stageWrap">
+        <canvas id="stageChart"></canvas>
+    </div>
+    <div class="table-scroll" style="margin-top:12px;">
+        <table>
+            <thead><tr><th>Stage</th><th>Deals</th><th>Value</th></tr></thead>
+            <tbody>
+                {% for stage, data in pipeline_by_stage.items %}
+                <tr>
+                    <td><strong>{{ stage }}</strong></td>
+                    <td>{{ data.count }}</td>
+                    <td>{{ data.value }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="empty-state">No opportunities yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="charts-row charts-row-even">
+    <div class="card chart-card">
+        <div class="chart-card-head">
+            <div>
+                <h2 class="section-heading" style="margin-bottom:2px;">Revenue Split</h2>
+                <p class="chart-card-sub">Advance vs full payments collected</p>
+            </div>
+        </div>
+        <div class="chart-canvas-wrap donut-wrap" id="revenueWrap">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card chart-card">
+        <div class="chart-card-head">
+            <div>
+                <h2 class="section-heading" style="margin-bottom:2px;">Follow Ups &amp; Meetings</h2>
+                <p class="chart-card-sub">Completion status and meeting mix</p>
+            </div>
+        </div>
+        <div class="metric-strip" style="grid-template-columns:1fr 1fr; margin-top:6px;">
+            <div class="metric-tile">
+                <div class="metric-label">Follow-ups Done</div>
+                <div class="metric-value" style="color:var(--green);">{{ followup_done }}</div>
+            </div>
+            <div class="metric-tile">
+                <div class="metric-label">Follow-ups Pending</div>
+                <div class="metric-value" style="color:var(--orange);">{{ followup_pending }}</div>
+            </div>
+        </div>
+        <div class="chart-canvas-wrap" id="meetingWrap" style="height:210px;">
+            <canvas id="meetingChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card chart-card">
+    <div class="chart-card-head">
+        <div>
+            <h2 class="section-heading" style="margin-bottom:2px;">Sales Team Performance</h2>
+            <p class="chart-card-sub">Leads handled vs converted, per sales person</p>
+        </div>
+    </div>
+    <div class="chart-canvas-wrap chart-canvas-wrap-lg" id="spoWrap">
+        <canvas id="spoChart"></canvas>
+    </div>
+    <div class="table-scroll" style="margin-top:14px;">
+        <table>
+            <thead><tr><th>Sales Person</th><th>Total</th><th>New</th><th>Positive</th><th>Converted</th><th>Lost</th><th>Conversion</th></tr></thead>
+            <tbody>
+                {% for spo in spo_stats %}
+                <tr>
+                    <td><span class="spo-cell"><span class="spo-avatar">{{ spo.name|slice:":1"|upper }}</span><strong>{{ spo.name }}</strong></span></td>
+                    <td>{{ spo.total }}</td>
+                    <td>{{ spo.new }}</td>
+                    <td>{{ spo.positive }}</td>
+                    <td style="color:var(--green); font-weight:700;">{{ spo.converted }}</td>
+                    <td style="color:var(--red);">{{ spo.lost }}</td>
+                    <td style="min-width:130px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="progress-bar-wrap" style="height:8px; flex:1;">
+                                <div class="progress-bar-fill done" style="width:{{ spo.conversion_rate }}%"></div>
+                            </div>
+                            <span style="font-weight:700; font-size:12.5px;">{{ spo.conversion_rate }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="empty-state">No sales persons yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script id="reportData" type="application/json">{
+  "status": [{% for label, count in leads_by_status.items %}{"label": "{{ label|escapejs }}", "value": {{ count }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+  "source": [{% for label, count in leads_by_source.items %}{"label": "{{ label|escapejs }}", "value": {{ count }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+  "stage": [{% for label, d in pipeline_by_stage.items %}{"label": "{{ label|escapejs }}", "count": {{ d.count }}, "value": {{ d.value|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+  "meeting": [{% for label, count in meeting_by_type.items %}{"label": "{{ label|escapejs }}", "value": {{ count }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+  "spo": [{% for s in spo_stats %}{"label": "{{ s.name|escapejs }}", "total": {{ s.total }}, "converted": {{ s.converted }}}{% if not forloop.last %},{% endif %}{% endfor %}],
+  "advance": {{ advance_revenue|default:0 }},
+  "full": {{ full_revenue|default:0 }}
+}</script>
+
+<script>
+(function () {
+    const P = { purple: '#6d4aff', purpleSoft: '#a78bfa', cyan: '#22b8cf', amber: '#f2a93b', red: '#f16063', green: '#1fb787', blue: '#4c6fff', violet: '#8b5cf6' };
+    const palette = [P.blue, P.violet, P.amber, P.green, P.red, P.cyan, P.purple, '#17b8ce'];
+    const ICON_CHART = '<svg class="chart-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>';
+
+    function empty(id, msg) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="chart-empty">' + ICON_CHART + '<p>' + msg + '</p></div>';
+    }
+
+    const WRAPS = ['statusWrap', 'sourceWrap', 'stageWrap', 'revenueWrap', 'meetingWrap', 'spoWrap'];
+
+    if (!window.Chart) {
+        WRAPS.forEach(function (id) { empty(id, 'Chart library could not load. Run "python manage.py collectstatic" and refresh.'); });
+        return;
+    }
+
+    Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#6b6785';
+    Chart.defaults.plugins.tooltip.backgroundColor = '#1e1b39';
+    Chart.defaults.plugins.tooltip.padding = 11;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.tooltip.boxPadding = 4;
+
+    let D = {};
+    try { D = JSON.parse(document.getElementById('reportData').textContent) || {}; } catch (e) { D = {}; }
+
+    const sum = function (arr, key) { return (arr || []).reduce(function (a, r) { return a + (r[key] || 0); }, 0); };
+
+    /* ---- Leads by status ---- */
+    const st = (D.status || []).filter(function (r) { return r.value > 0; });
+    if (sum(st, 'value') > 0) {
+        const total = sum(st, 'value');
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: { labels: st.map(function (r) { return r.label; }), datasets: [{ data: st.map(function (r) { return r.value; }), backgroundColor: palette, borderWidth: 4, borderColor: '#fff', hoverOffset: 8 }] },
+            options: { cutout: '72%', maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+        document.getElementById('statusLegend').innerHTML = st.map(function (r, i) {
+            const pct = ((r.value / total) * 100).toFixed(1);
+            return '<div class="legend-row"><span class="legend-dot" style="background:' + palette[i % palette.length] + '"></span>' +
+                '<span class="legend-label">' + r.label + '</span><span class="legend-value">' + r.value + ' · ' + pct + '%</span></div>';
+        }).join('');
+    } else {
+        empty('statusWrap', 'No leads yet.');
+    }
+
+    /* ---- Leads by source ---- */
+    const src = D.source || [];
+    if (sum(src, 'value') > 0) {
+        new Chart(document.getElementById('sourceChart'), {
+            type: 'bar',
+            data: {
+                labels: src.map(function (r) { return r.label; }),
+                datasets: [{ label: 'Leads', data: src.map(function (r) { return r.value; }), backgroundColor: src.map(function (_, i) { return palette[i % palette.length]; }), borderRadius: 7, borderSkipped: false, barThickness: 20 }]
+            },
+            options: {
+                indexAxis: 'y', maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { precision: 0 }, border: { display: false }, grid: { color: '#f1eff9' } },
+                    y: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600' } } }
+                }
+            }
+        });
+    } else {
+        empty('sourceWrap', 'No lead source data yet.');
+    }
+
+    /* ---- Pipeline by stage (count bars + value line) ---- */
+    const stage = D.stage || [];
+    if (sum(stage, 'count') > 0 || sum(stage, 'value') > 0) {
+        new Chart(document.getElementById('stageChart'), {
+            data: {
+                labels: stage.map(function (r) { return r.label; }),
+                datasets: [
+                    { type: 'bar', label: 'Deals', data: stage.map(function (r) { return r.count; }), backgroundColor: P.purpleSoft, borderRadius: 7, borderSkipped: false, maxBarThickness: 34, yAxisID: 'y' },
+                    { type: 'line', label: 'Value', data: stage.map(function (r) { return r.value; }), borderColor: P.purple, backgroundColor: P.purple, borderWidth: 3, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: P.purple, pointBorderWidth: 2.5, yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 18, font: { weight: '600' } } } },
+                scales: {
+                    y: { beginAtZero: true, position: 'left', ticks: { precision: 0, padding: 8 }, border: { display: false }, grid: { color: '#f1eff9' }, title: { display: true, text: 'Deals' } },
+                    y1: { beginAtZero: true, position: 'right', border: { display: false }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Value' } },
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600' } } }
+                }
+            }
+        });
+    } else {
+        empty('stageWrap', 'No opportunities yet.');
+    }
+
+    /* ---- Revenue split ---- */
+    const adv = Number(D.advance) || 0, fl = Number(D.full) || 0;
+    if (adv + fl > 0) {
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'doughnut',
+            data: { labels: ['Advance', 'Full'], datasets: [{ data: [adv, fl], backgroundColor: [P.purpleSoft, P.purple], borderWidth: 4, borderColor: '#fff', hoverOffset: 8 }] },
+            options: { cutout: '68%', maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 16, font: { weight: '600' } } } } }
+        });
+    } else {
+        empty('revenueWrap', 'No payments recorded yet.');
+    }
+
+    /* ---- Meetings by type ---- */
+    const mt = D.meeting || [];
+    if (sum(mt, 'value') > 0) {
+        new Chart(document.getElementById('meetingChart'), {
+            type: 'bar',
+            data: { labels: mt.map(function (r) { return r.label; }), datasets: [{ label: 'Meetings', data: mt.map(function (r) { return r.value; }), backgroundColor: mt.map(function (_, i) { return palette[i % palette.length]; }), borderRadius: 7, borderSkipped: false, maxBarThickness: 32 }] },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0, padding: 8 }, border: { display: false }, grid: { color: '#f1eff9' } },
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600' } } }
+                }
+            }
+        });
+    } else {
+        empty('meetingWrap', 'No meetings recorded yet.');
+    }
+
+    /* ---- SPO performance ---- */
+    const spo = D.spo || [];
+    if (spo.length > 0) {
+        new Chart(document.getElementById('spoChart'), {
+            type: 'bar',
+            data: {
+                labels: spo.map(function (r) { return r.label; }),
+                datasets: [
+                    { label: 'Total leads', data: spo.map(function (r) { return r.total; }), backgroundColor: P.purpleSoft, borderRadius: 7, borderSkipped: false, maxBarThickness: 26 },
+                    { label: 'Converted', data: spo.map(function (r) { return r.converted; }), backgroundColor: P.purple, borderRadius: 7, borderSkipped: false, maxBarThickness: 26 }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 18, font: { weight: '600' } } } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0, padding: 8 }, border: { display: false }, grid: { color: '#f1eff9' } },
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: '600' } } }
+                }
+            }
+        });
+    } else {
+        empty('spoWrap', 'No sales persons yet.');
+    }
+})();
+</script>
+
+{% endblock %}

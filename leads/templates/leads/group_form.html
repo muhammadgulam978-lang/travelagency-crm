@@ -1,0 +1,17 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ title }} — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head"><div><h1>{{ title }}</h1><p>Group ID automatically generate hoti hai (UMR-2026-0001 format).</p></div></div>
+<section class="r-panel">
+    <div class="r-panel-body" style="padding-top:18px;">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div style="display:flex;gap:10px;margin-top:14px;">
+                <button type="submit" class="r-btn">Save group</button>
+                <a href="{% url 'group_list' %}" class="r-btn ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

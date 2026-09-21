@@ -1,0 +1,91 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ package.package_name|default:"Package" }} - Lead CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">Package / <strong>{{ package.package_name|default:"View" }}</strong></h1>
+    <div style="display:flex; gap:10px;">
+        <a href="{% url 'package_edit' package.pk %}" class="btn">Edit</a>
+        <a href="{% url 'package_list' %}" class="btn" style="background:#7a1f3d; box-shadow:none;">Back</a>
+    </div>
+</div>
+
+<div class="card" style="padding:24px 28px;">
+    <h3 class="dynamic-row-header">Package Details</h3>
+    <div class="form-row">
+        <div class="form-group"><label class="field-label">Company</label><div>{{ package.company.name|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Package #</label><div>{{ package.package_number|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Category</label><div>{{ package.category|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Zone</label><div>{{ package.zone|default:"—" }}</div></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label class="field-label">Package Code</label><div>{{ package.package_code|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Days</label><div>{{ package.days|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Year</label><div>{{ package.year }}</div></div>
+        <div class="form-group"><label class="field-label">Maktab</label><div>{{ package.maktab|default:"—" }} {% if package.maktab_number %}({{ package.maktab_number }}){% endif %}</div></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label class="field-label">Medina Arrival</label><div>{{ package.get_medina_arrival_display }}</div></div>
+        <div class="form-group"><label class="field-label">Hajj Duration</label><div>{{ package.get_hajj_duration_display }}</div></div>
+        <div class="form-group"><label class="field-label">Hijri Start</label><div>{{ package.hijri_start_day|default:"—" }} {{ package.get_hijri_start_month_display }}</div></div>
+    </div>
+
+    <h3 class="dynamic-row-header" style="margin-top:24px;">Package Category</h3>
+    <div class="form-row">
+        <div class="form-group"><label class="field-label">Room Type</label><div>{{ package.room_type|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Azizia Room Type</label><div>{{ package.azizia_room_type|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Makkah Type</label><div>{{ package.get_makkah_type_display|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Medinah Type</label><div>{{ package.get_medinah_type_display|default:"—" }}</div></div>
+    </div>
+
+    <h3 class="dynamic-row-header" style="margin-top:24px;">Sharing Breakdown</h3>
+    <table style="margin-bottom:10px;">
+        <thead><tr><th>Zone</th><th>Double</th><th>Triple</th><th>Quad</th><th>Sharing</th></tr></thead>
+        <tbody>
+            <tr><td>Makkah A</td><td>{{ package.makkah_a_double }}</td><td>{{ package.makkah_a_triple }}</td><td>{{ package.makkah_a_quad }}</td><td>{{ package.makkah_a_sharing }}</td></tr>
+            <tr><td>Makkah B</td><td>{{ package.makkah_b_double }}</td><td>{{ package.makkah_b_triple }}</td><td>{{ package.makkah_b_quad }}</td><td>{{ package.makkah_b_sharing }}</td></tr>
+            <tr><td>Madinah A</td><td>{{ package.madinah_a_double }}</td><td>{{ package.madinah_a_triple }}</td><td>{{ package.madinah_a_quad }}</td><td>{{ package.madinah_a_sharing }}</td></tr>
+            <tr><td>Madinah B</td><td>{{ package.madinah_b_double }}</td><td>{{ package.madinah_b_triple }}</td><td>{{ package.madinah_b_quad }}</td><td>{{ package.madinah_b_sharing }}</td></tr>
+        </tbody>
+    </table>
+
+    {% if package.accommodations.all %}
+    <h3 class="dynamic-row-header" style="margin-top:24px;">Accommodation</h3>
+    <table style="margin-bottom:10px;">
+        <thead><tr><th>Place</th><th>Check In</th><th>Check Out</th><th>Hotel (A)</th><th>Hotel (B)</th><th>Nights</th></tr></thead>
+        <tbody>
+            {% for acc in package.accommodations.all %}
+            <tr><td>{{ acc.get_place_display }}</td><td>{{ acc.check_in|date:"d M, Y"|default:"—" }}</td><td>{{ acc.check_out|date:"d M, Y"|default:"—" }}</td><td>{{ acc.hotel_a|default:"—" }}</td><td>{{ acc.hotel_b|default:"—" }}</td><td>{{ acc.nights|default:"—" }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if package.flights.all %}
+    <h3 class="dynamic-row-header" style="margin-top:24px;">Flights</h3>
+    <table style="margin-bottom:10px;">
+        <thead><tr><th>Airline</th><th>Flight No.</th><th>Origin</th><th>Destination</th><th>Departure</th><th>Arrival</th></tr></thead>
+        <tbody>
+            {% for f in package.flights.all %}
+            <tr><td>{{ f.airline|default:"—" }}</td><td>{{ f.flight_no|default:"—" }}</td><td>{{ f.origin|default:"—" }}</td><td>{{ f.destination|default:"—" }}</td><td>{{ f.departure_date|date:"d M, Y"|default:"—" }}</td><td>{{ f.arrival_date|date:"d M, Y"|default:"—" }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if package.terms_condition %}
+    <h3 class="dynamic-row-header" style="margin-top:24px;">Terms &amp; Condition</h3>
+    <p class="row-subtext" style="white-space:pre-wrap;">{{ package.terms_condition }}</p>
+    {% endif %}
+
+    {% if package.itinerary_description %}
+    <h3 class="dynamic-row-header" style="margin-top:24px;">Itinerary</h3>
+    <p class="row-subtext" style="white-space:pre-wrap;">{{ package.itinerary_description }}</p>
+    {% endif %}
+
+    <h3 class="dynamic-row-header" style="margin-top:24px;">Maktab Address</h3>
+    <div class="form-row">
+        <div class="form-group"><label class="field-label">Maktab Address</label><div>{{ package.maktab_address|default:"—" }}</div></div>
+        <div class="form-group"><label class="field-label">Office Address</label><div>{{ package.office_address|default:"—" }}</div></div>
+    </div>
+</div>
+{% endblock %}

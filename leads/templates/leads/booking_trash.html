@@ -1,0 +1,40 @@
+{% extends 'leads/base.html' %}
+{% block title %}Booking Trash - Lead CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">Booking Trash</h1>
+    <a href="{% url 'booking_list' %}" class="btn">&#8592; Back to Bookings</a>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>Client / Company</th>
+                <th>Package Type</th>
+                <th>Year</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.client_or_company_name }}</td>
+                <td>{{ booking.get_package_type_display }}</td>
+                <td>{{ booking.year }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'booking_restore' booking.pk %}">Restore</a>
+                        <a href="{% url 'booking_delete_permanent' booking.pk %}" onclick="return confirm('Permanently delete this booking? This cannot be undone.');">Delete Permanently</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty-state">Trash is empty.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

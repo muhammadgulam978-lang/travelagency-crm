@@ -1,0 +1,68 @@
+{% extends 'leads/base.html' %}
+{% block title %}Pilgrims — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div>
+        <h1>Pilgrims</h1>
+        <p>{{ total }} registered pilgrim{{ total|pluralize }}{% if expiring_count %} &middot; <span style="color:var(--r-rose);font-weight:600;">{{ expiring_count }} passport alert{{ expiring_count|pluralize }}</span>{% endif %}</p>
+    </div>
+    <div class="r-page-actions">
+        {% if expiring_count %}
+        <a href="?alert=passport" class="r-btn ghost">Passport alerts</a>
+        {% endif %}
+        <a href="{% url 'pilgrim_create' %}" class="r-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New pilgrim
+        </a>
+    </div>
+</div>
+
+<form method="get" class="r-filters">
+    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search name, pilgrim ID, passport or CNIC…">
+    <select name="trip">
+        <option value="">All trip types</option>
+        {% for c,l in trip_choices %}<option value="{{ c }}" {% if request.GET.trip == c %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <select name="status">
+        <option value="">All statuses</option>
+        {% for c,l in status_choices %}<option value="{{ c }}" {% if request.GET.status == c %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="r-btn">Apply</button>
+</form>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead>
+                <tr><th>Pilgrim</th><th>Group</th><th>Trip</th><th>Passport</th><th>Documents</th><th>Visa</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for p in pilgrims %}
+                <tr>
+                    <td>
+                        <a href="{% url 'pilgrim_detail' p.pk %}" class="r-cell-title">{{ p.full_name }}</a>
+                        <div class="r-cell-sub">{{ p.pilgrim_id }}{% if p.age %} &middot; {{ p.age }} yrs{% endif %} &middot; {{ p.get_gender_display }}</div>
+                    </td>
+                    <td>{% if p.group %}<a href="{% url 'group_detail' p.group.pk %}">{{ p.group.name }}</a><div class="r-cell-sub">{{ p.get_relationship_display }}</div>{% else %}—{% endif %}</td>
+                    <td>{{ p.get_trip_type_display }}</td>
+                    <td>
+                        {{ p.passport_number|default:"—" }}
+                        {% if p.passport_alert == 'expired' %}
+                        <div><span class="r-alert danger">Expired</span></div>
+                        {% elif p.passport_alert == 'expiring' %}
+                        <div><span class="r-alert warn">Expires in {{ p.passport_days_left }} days</span></div>
+                        {% endif %}
+                    </td>
+                    <td>{% if p.documents_complete %}<span class="r-alert ok">Complete</span>{% else %}<span class="r-alert warn">Incomplete</span>{% endif %}</td>
+                    <td><span class="r-status st-pending">{{ p.get_visa_status_display }}</span></td>
+                    <td><span class="r-stage stage-new">{{ p.get_status_display }}</span></td>
+                    <td><div class="r-row-actions"><a href="{% url 'pilgrim_edit' p.pk %}">Edit</a></div></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8"><div class="r-empty"><div class="t">No pilgrims yet</div>Convert a lead to a pilgrim, or add one directly.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

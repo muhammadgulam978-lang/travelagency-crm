@@ -1,0 +1,1092 @@
+{% load custom_filters %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Raabta360 — Hajj, Umrah & Travel CRM{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/raabta.css' %}">
+<link rel="icon" href="{% static 'images/logo_mark.png' %}">
+<script src="{% static 'js/chart.umd.js' %}"></script>
+</head>
+<body>
+
+<div class="mobile-topbar">
+    <button type="button" class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <span class="mobile-brand">Raabta360</span>
+</div>
+
+<div class="app" id="appRoot">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar">
+        <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+
+        <a href="{% url 'dashboard' %}" class="r-brand">
+            <img class="r-brand-mark" src="{% static 'images/logo_mark.png' %}" alt="Raabta360">
+            <span class="r-brand-text">
+                <span class="r-brand-name">Raabta360</span>
+                <span class="r-brand-sub">Hajj, Umrah &amp; Travel CRM</span>
+            </span>
+        </a>
+
+        <!-- MENU -->
+        <nav>
+            <a href="{% url 'dashboard' %}" class="{% if active == 'dashboard' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></span> Dashboard</span>
+            </a>
+
+            <a href="{% url 'profit_report' %}" class="{% if active == 'profit' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Profit &amp; Cost</span>
+            </a>
+
+            <a href="{% url 'receivables_list' %}" class="{% if active == 'receivables' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></span> Receivables</span>
+            </a>
+            <a href="{% url 'analytics_dashboard' %}" class="{% if active == 'analytics' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 3.5-4 3 3L20 7"/></svg></span> Analytics</span>
+            </a>
+
+           
+            {% if '*' in allowed_sections or user.profile.role == 'ceo' %}
+
+            {% if '*' in allowed_sections or 'ceo_dashboard' in allowed_sections %}
+
+            <a href="{% url 'ceo_dashboard' %}" class="{% if active == 'ceo_dashboard' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m2 6 4 4 6-7 6 7 4-4v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><path d="M6 19h12"/></svg></span> CEO Dashboard</span>
+            </a>
+            {% endif %}
+            {% if user.is_superuser or user.profile.role == 'admin' %}
+            <a href="{% url 'user_list' %}" class="{% if active == 'users' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Users</span>
+            </a>
+            {% endif %}
+            {% endif %}
+        </nav>
+
+        <!-- CONTACTS -->
+{% if '*' in allowed_sections or 'contacts' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('contacts')">
+            CORPORATE CLIENTS
+            {% if 'contacts' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-contacts">
+            <a href="{% url 'company_list' %}" class="{% if active == 'companies' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 22v-3h4v3"/></svg></span> Corporate Accounts</span>
+                <span class="badge badge-blue">{{ sidebar_counts.companies }}</span>
+            </a>
+            <a href="{% url 'contact_list' %}" class="{% if active == 'contacts' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></span> Employee Travelers</span>
+                <span class="badge badge-purple">{{ sidebar_counts.contacts }}</span>
+            </a>
+            {% if '*' in allowed_sections or 'corporate' in allowed_sections %}
+            <a href="{% url 'corporate_request_list' %}" class="{% if active == 'corporate' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span> Corporate Travel Requests</span>
+            </a>
+            {% endif %}
+            {% if '*' in allowed_sections or 'suppliers' in allowed_sections %}
+            <a href="{% url 'supplier_list' %}" class="{% if active == 'suppliers' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.9-3.9a2 2 0 0 1 0-2.8l.8-.8a2 2 0 0 1 2.8 0L21 8.8"/><path d="m21 3-3.5 3.5"/><path d="M3 8.8 5.8 6a2 2 0 0 1 2.8 0l4 4"/><path d="m8 14-3 3a1 1 0 1 0 3 3l3-3"/></svg></span> Suppliers</span>
+            </a>
+            {% endif %}
+        </nav>
+{% endif %}
+
+        <!-- PIPELINE -->
+<!-- {% if '*' in allowed_sections or 'pipeline' in allowed_sections %} -->
+        <!-- <div class="section-label dropdown-toggle" onclick="toggleSection('pipeline')">
+            SALES PIPELINE
+            {% if 'pipeline' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-pipeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-pipeline">
+            <a href="{% url 'opportunity_pipeline' %}" class="{% if active == 'pipeline' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5z"/></svg></span> Pipeline</span>
+                <span class="badge badge-blue">{{ sidebar_counts.opportunities }}</span>
+            </a>
+            <a href="{% url 'opportunity_list' %}" class="{% if active == 'opportunities' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 3h12v6a6 6 0 0 1-12 0z"/><path d="M12 15v4M8 21h8"/></svg></span> Opportunities</span>
+            </a>
+            <a href="{% url 'opportunity_list' %}?stage=won" class="{% if active == 'won' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Won</span>
+                <span class="badge badge-green">{{ sidebar_counts.won }}</span>
+            </a>
+        </nav> -->
+<!-- {% endif %} -->
+
+
+ <!--  TRAVEL OPERATIONS -->
+{% if '*' in allowed_sections or 'booking' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('booking')">
+             Travel Operations
+            {% if 'booking' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-booking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-booking">
+
+             <a href="{% url 'package_list' %}" class="{% if active == 'packages' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></span> Packages (Hajj / Umrah)</span>
+            </a>
+            <a href="{% url 'booking_list' %}" class="{% if active == 'booking' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span> Bookings</span>
+            </a>
+            <a href="{% url 'visa_list' %}" class="{% if active == 'visa' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span> Visa Applications</span>
+            </a>
+             <a href="{% url 'flight_list' %}" class="{% if active == 'flights' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.1 2.1 0 0 0-3-3L13 8 4.8 6.2a.5.5 0 0 0-.5.8L8 11l-2 2-2.3-.6a.5.5 0 0 0-.5.8L6 16l2.8 2.8.8-.5a.5.5 0 0 0-.6-2.3l2-2 3.2 3.7a.5.5 0 0 0 .8-.5z"/></svg></span> Flights</span>
+            </a>
+            <a href="{% url 'hotel_list' %}" class="{% if active == 'hotels' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"/></svg></span> Hotels</span>
+            </a>
+            <a href="{% url 'transport_list' %}" class="{% if active == 'transportation' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2v-4l-2-5H5L3 13v4h2"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5"/></svg></span> Transport</span>
+            </a>
+            <a href="{% url 'ziyarat_list' %}" class="{% if active == 'ziyarat' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.5 2 4 3.6 4 5.5S14.2 12 12 12s-4-1.6-4-3.5S9.5 5 12 3z"/><path d="M4 21v-6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v6M4 21h16"/></svg></span> Ziyarat</span>
+            </a>
+            <a href="{% url 'pilgrim_list' %}" class="{% if active == 'pilgrims' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5 12 4l8 4.5V17l-8 4.5L4 17z"/><path d="M4 8.5 12 13l8-4.5M12 13v8.5"/></svg></span> Pilgrims</span>
+            </a>
+
+            <a href="{% url 'group_list' %}" class="{% if active == 'groups' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></span> Groups / Families</span>
+            </a>
+            
+            <a href="{% url 'itinerary_list' %}" class="{% if active == 'itineraries' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg></span> Tours & Itineraries</span>
+            </a>
+            
+        </nav>
+{% endif %}
+
+        <!-- QUOTATIONS -->
+{% if '*' in allowed_sections or 'quotations' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('quotations')">
+            QUOTATIONS 
+            {% if 'quotations' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-quotations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-quotations">
+            <a href="{% url 'quotation_list' %}" class="{% if active == 'quotations' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></span> All Quotations</span>
+                <span class="badge badge-blue">{{ sidebar_counts.quotations }}</span>
+            </a>
+            <a href="{% url 'quotation_list' %}?status=draft">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span> Draft</span>
+            </a>
+            <a href="{% url 'quotation_list' %}?status=approved">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Approved</span>
+            </a>
+            {% if request.user|has_full_access:'quotations' %}
+            <a href="{% url 'quotation_create' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> New Quotation</span>
+            </a>
+            {% endif %}
+        </nav>
+{% endif %}
+
+
+        <!-- MEETINGS -->
+{% if '*' in allowed_sections or 'meetings' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('meetings')">
+            MEETINGS 
+            {% if 'meetings' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-meetings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-meetings">
+            <a href="{% url 'meeting_list' %}" class="{% if active == 'meetings' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> All Meetings</span>
+                <span class="badge badge-blue">{{ sidebar_counts.meetings }}</span>
+            </a>
+            <a href="{% url 'meeting_list' %}?scope=today">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span> Today</span>
+                <span class="badge badge-orange">{{ sidebar_counts.meetings_today }}</span>
+            </a>
+            <a href="{% url 'meeting_list' %}?scope=upcoming">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span> Upcoming</span>
+            </a>
+            {% if request.user|has_full_access:'meetings' %}
+            <a href="{% url 'meeting_create' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Schedule Meeting</span>
+            </a>
+            {% endif %}
+        </nav>
+{% endif %}
+
+        <!-- TASKS -->
+{% if '*' in allowed_sections or 'tasks' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('tasks')">
+            TASKS 
+            {% if 'tasks' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-tasks">
+            <a href="{% url 'general_task_list' %}" class="{% if active == 'general_tasks' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span> All Tasks</span>
+                <span class="badge badge-blue">{{ sidebar_counts.tasks_pending }}</span>
+            </a>
+            <a href="{% url 'general_task_list' %}?scope=mine">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Mine</span>
+            </a>
+            <a href="{% url 'general_task_list' %}?scope=overdue">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span> Overdue</span>
+                <span class="badge badge-red">{{ sidebar_counts.tasks_overdue }}</span>
+            </a>
+            {% if request.user|has_full_access:'tasks' %}
+            <a href="{% url 'general_task_create' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> New Task</span>
+            </a>
+            {% endif %}
+        </nav>
+{% endif %}
+
+{% if '*' in allowed_sections or 'salespersons' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('salespersons')">
+            SALES PERSONS 
+            {% if 'salespersons' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-salespersons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-salespersons">
+            <a href="{% url 'salesperson_list' %}" class="{% if active == 'salespersons' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> All SPOs</span>
+            </a>
+            {% if request.user|has_full_access:'salespersons' %}
+            <a href="{% url 'salesperson_create' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Add SPO</span>
+            </a>
+            {% endif %}
+        </nav>
+{% endif %}
+
+
+        <!-- LEAD -->
+{% if '*' in allowed_sections or 'leads' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('lead')">
+            LEAD
+            {% if 'leads' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-lead">
+            {% if request.user|has_full_access:'leads' %}
+            <a href="{% url 'create_lead' %}" class="{% if active == 'create_lead' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Create Lead</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'all_leads' %}" class="{% if active == 'all_leads' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span> All Leads</span>
+                <span class="badge badge-blue">{{ sidebar_counts.total }}</span>
+            </a>
+            <a href="{% url 'lead_status_list' 'new' %}" class="{% if active == 'new' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span> New</span>
+                <span class="badge badge-blue">{{ sidebar_counts.new }}</span>
+            </a>
+            <a href="{% url 'lead_status_list' 'positive' %}" class="{% if active == 'positive' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/><path d="M7 11l4.6-9.2A2 2 0 0 1 15 3.3V9h4.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 18.2 20H7z"/></svg></span> Positive</span>
+                <span class="badge badge-purple">{{ sidebar_counts.positive }}</span>
+            </a>
+            <a href="{% url 'lead_status_list' 'lost' %}" class="{% if active == 'lost' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span> Lost</span>
+                <span class="badge badge-red">{{ sidebar_counts.lost }}</span>
+            </a>
+            <a href="{% url 'lead_status_list' 'quotation' %}" class="{% if active == 'quotation' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Quotation</span>
+                <span class="badge badge-orange">{{ sidebar_counts.quotation }}</span>
+            </a>
+            <a href="{% url 'lead_status_list' 'converted' %}" class="{% if active == 'converted' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Converted</span>
+                <span class="badge badge-green">{{ sidebar_counts.convert }}</span>
+            </a>
+
+              <a href="{% url 'pipeline_kanban' %}" class="{% if active == 'kanban' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="14" rx="1.5"/><rect x="10" y="3" width="6" height="10" rx="1.5"/><rect x="17" y="3" width="4" height="18" rx="1.5"/></svg></span> Pipeline</span>
+            </a>
+        </nav>
+{% endif %}
+
+        <!-- PAYMENT -->
+{% if '*' in allowed_sections or 'payments' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('payment')">
+            PAYMENT 
+            {% if 'payments' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-payment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-payment">
+            <a href="{% url 'payment_advance' %}" class="{% if active == 'advance' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Advance</span>
+                <span class="badge badge-red">{{ sidebar_counts.payment_advance }}</span>
+            </a>
+            <a href="{% url 'payment_full' %}" class="{% if active == 'full' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Full</span>
+                <span class="badge badge-green">{{ sidebar_counts.payment_full }}</span>
+            </a>
+            <a href="{% url 'scheduled_payment_list' %}" class="{% if active == 'scheduled' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Scheduled</span>
+                <span class="badge badge-blue">{{ sidebar_counts.payment_scheduled }}</span>
+            </a>
+        </nav>
+{% endif %}
+
+        <!-- FOLLOWUP -->
+{% if '*' in allowed_sections or 'followups' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('followup')">
+            FOLLOWUP 
+            {% if 'followups' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-followup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-followup">
+            <a href="{% url 'followup_list' 'pending' %}" class="{% if active == 'pending' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span> Pending</span>
+                <span class="badge badge-orange">{{ sidebar_counts.followup_pending }}</span>
+            </a>
+            <a href="{% url 'followup_list' 'today' %}" class="{% if active == 'today' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span> Today</span>
+                <span class="badge badge-orange">{{ sidebar_counts.followup_today }}</span>
+            </a>
+            <a href="{% url 'followup_list' 'next' %}" class="{% if active == 'next' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span> Next</span>
+                <span class="badge badge-orange">{{ sidebar_counts.followup_next }}</span>
+            </a>
+            <a href="{% url 'followup_list' 'done' %}" class="{% if active == 'done' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span> Done</span>
+                <span class="badge badge-orange">{{ sidebar_counts.followup_done }}</span>
+            </a>
+        </nav>
+{% endif %}
+
+        <!-- COMMUNICATIONS -->
+{% if '*' in allowed_sections or 'communications' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('communications')">
+            COMMUNICATIONS 
+            {% if 'communications' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-communications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-communications">
+            <a href="{% url 'communication_list' %}" class="{% if active == 'communications' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg></span> All Logs</span>
+                <span class="badge badge-blue">{{ sidebar_counts.communications }}</span>
+            </a>
+            <a href="{% url 'communication_list' %}?type=email">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></span> Emails</span>
+            </a>
+            <a href="{% url 'communication_list' %}?type=call">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 6a3 3 0 0 1 2.4 2.4M14.1 2a7 7 0 0 1 6.4 6.4"/><path d="M19 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1-.9 4.2 2 2 0 0 1 1.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L5.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7A2 2 0 0 1 19 16.9z"/></svg></span> Calls</span>
+            </a>
+            <a href="{% url 'communication_list' %}?type=whatsapp">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span> WhatsApp</span>
+            </a>
+            <a href="{% url 'communication_create' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Log Communication</span>
+            </a>
+
+             <a href="{% url 'calendar_view' %}" class="{% if active == 'calendar' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Calendar</span>
+            </a>
+
+
+        </nav>
+{% endif %}
+
+        <!-- EMAILS -->
+{% if '*' in allowed_sections or 'emails' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('emails')">
+            EMAILS 
+            {% if 'emails' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-emails"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-emails">
+            <a href="{% url 'email_inbox' %}" class="{% if active == 'emails' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span> All Emails</span>
+                <span class="badge badge-blue">{{ sidebar_counts.emails }}</span>
+            </a>
+            {% if request.user|has_full_access:'emails' %}
+            <a href="{% url 'email_compose' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Compose Email</span>
+            </a>
+            {% endif %}
+            {% if '*' in allowed_sections or 'bulk_email' in allowed_sections %}
+            <a href="{% url 'bulk_email_list' %}" class="{% if active == 'bulk_email' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8v18l-18-8z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span> Bulk Email Campaigns</span>
+            </a>
+            {% endif %}
+        </nav>
+{% endif %}
+
+        <!-- CALLING -->
+{% if '*' in allowed_sections or 'calling' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('calling')">
+            CALLING 
+            {% if 'calling' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-calling"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-calling">
+            <a href="{% url 'call_log_list' %}" class="{% if active == 'call_logs' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.1 6a3 3 0 0 1 2.4 2.4M14.1 2a7 7 0 0 1 6.4 6.4"/><path d="M19 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1-.9 4.2 2 2 0 0 1 1.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L5.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7A2 2 0 0 1 19 16.9z"/></svg></span> Call History</span>
+                <span class="badge badge-blue">{{ sidebar_counts.calls_total }}</span>
+            </a>
+            <a href="{% url 'call_log_list' %}?channel=phone">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span> Phone Calls</span>
+            </a>
+            <a href="{% url 'call_log_list' %}?channel=whatsapp">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span> WhatsApp Calls</span>
+            </a>
+            <a href="{% url 'call_schedule_list' %}" class="{% if active == 'scheduled_calls' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Scheduled Calls</span>
+                <span class="badge badge-orange">{{ sidebar_counts.calls_scheduled }}</span>
+            </a>
+            {% if not google_connected %}
+            <a href="{% url 'google_authorize' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></span> Connect Calendar</span>
+            </a>
+            {% endif %}
+        </nav>
+{% endif %}
+
+        <!-- ACTIVITY -->
+{% if '*' in allowed_sections or 'activity' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('activity')">
+            ACTIVITY 
+            {% if 'activity' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-activity">
+            <a href="{% url 'activity_log' %}" class="{% if active == 'activity_log' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span> Activity Log</span>
+                <span class="badge badge-purple">{{ sidebar_counts.activity_today }}</span>
+            </a>
+        </nav>
+{% endif %}
+
+        <!-- REPORTS -->
+{% if '*' in allowed_sections or 'reports' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('reports')">
+            REPORTS 
+            {% if 'reports' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-reports">
+            <a href="{% url 'reports' %}" class="{% if active == 'reports' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12" y="7" width="3" height="10" rx="1"/><rect x="17" y="13" width="3" height="4" rx="1"/></svg></span> Analytics</span>
+            </a>
+            <a href="{% url 'sales_forecast' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg></span> AI Forecast</span>
+            </a>
+        </nav>
+{% endif %}
+
+        <!-- DOCUMENTS -->
+{% if '*' in allowed_sections or 'documents' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('documents')">
+            DOCUMENTS 
+            {% if 'documents' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-documents">
+            <a href="{% url 'document_list' %}" class="{% if active == 'documents' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.6 3.9A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg></span> All Documents</span>
+                <span class="badge badge-blue">{{ sidebar_counts.documents }}</span>
+            </a>
+            <a href="{% url 'document_list' %}?type=contract">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M14 2v6h6"/><path d="M18.4 12.6a2 2 0 1 1 3 3L17 20l-4 1 1-4z"/></svg></span> Contracts</span>
+            </a>
+            <a href="{% url 'document_list' %}?type=proposal">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></span> Proposals</span>
+            </a>
+            <a href="{% url 'document_upload' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg></span> Upload</span>
+            </a>
+        </nav>
+{% endif %}
+
+        <!-- REVIEWS -->
+{% if '*' in allowed_sections or 'reviews' in allowed_sections %}
+        <div class="section-label dropdown-toggle" onclick="toggleSection('reviews')">
+            REVIEWS & FEEDBACK
+            {% if 'reviews' in view_only_sections %}
+            <span style="font-size:10px; color:#fff; opacity:0.6; margin-left:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:-1px;"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> view only</span>
+            {% endif %}
+            <span class="arrow" id="arrow-reviews"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;display:block;transition:transform .2s;"><path d="m6 9 6 6 6-6"/></svg></span>
+        </div>
+        <nav class="dropdown-section" id="section-reviews">
+            <a href="{% url 'review_list' %}" class="{% if active == 'reviews' %}active{% endif %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1z"/></svg></span> Customer Reviews</span>
+            </a>
+        </nav>
+{% endif %}
+
+{% if '*' in allowed_sections %}
+<div class="section-label">WHATSAPP</div>
+<nav>
+    <a href="{% url 'bulk_whatsapp_sender' %}"
+       class="{% if active == 'bulk_whatsapp' %}active{% endif %}">
+        <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg></span> Bulk Sender</span>
+    </a>
+</nav>
+{% endif %}
+
+        <!-- ACCOUNT -->
+        {% if user.is_authenticated %}
+        <div class="section-label">ACCOUNT</div>
+        <nav>
+            <a href="{% url 'logout' %}">
+                <span class="left"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></span> Logout ({{ user.username }})</span>
+            </a>
+        </nav>
+        {% endif %}
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Search leads, bookings, clients…" disabled>
+            </div>
+            <a href="{% url 'notification_list' %}" class="notif-bell">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;display:block;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                {% if sidebar_counts.unread_notifications > 0 %}
+                <span class="notif-count">{{ sidebar_counts.unread_notifications }}</span>
+                {% endif %}
+            </a>
+            {% if user.is_authenticated %}
+            <div class="topbar-user">
+                <span class="topbar-avatar">{{ user.username|slice:":1"|upper }}</span>
+                <span class="topbar-username">{{ user.username }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script>
+// mobile hamburger sidebar toggle
+(function() {
+    const appRoot = document.getElementById('appRoot');
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const closeBtn = document.getElementById('sidebarCloseBtn');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    function openSidebar() { appRoot.classList.add('sidebar-open'); }
+    function closeSidebar() { appRoot.classList.remove('sidebar-open'); }
+
+    if (hamburgerBtn) hamburgerBtn.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+
+    // close sidebar automatically when a nav link is tapped on mobile
+    document.querySelectorAll('.sidebar nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 900) closeSidebar();
+        });
+    });
+})();
+
+// remember open/closed state in localStorage
+function toggleSection(name) {
+    const section = document.getElementById('section-' + name);
+    const arrow = document.getElementById('arrow-' + name);
+    const isOpen = section.classList.contains('open');
+
+    if (isOpen) {
+        section.classList.remove('open');
+        arrow.style.transform = "rotate(-90deg)";
+        localStorage.setItem('sidebar-' + name, 'closed');
+    } else {
+        section.classList.add('open');
+        arrow.style.transform = "rotate(0deg)";
+        localStorage.setItem('sidebar-' + name, 'open');
+    }
+}
+
+// restore state on page load
+const sections = [
+    'contacts', 'pipeline', 'quotations', 'proposals', 'projects',
+    'meetings', 'tasks', 'lead', 'payment', 'followup',
+
+    'communications', 'support', 'activity', 'reports',
+
+    'communications', 'emails', 'support', 'activity', 'reports',
+
+    'documents', 'contracts', 'salespersons'
+];
+
+sections.forEach(name => {
+    const state = localStorage.getItem('sidebar-' + name);
+    const section = document.getElementById('section-' + name);
+    const arrow = document.getElementById('arrow-' + name);
+    if (!section || !arrow) return;
+
+    // default open for active section, closed for others
+    const hasActive = section.querySelector('a.active');
+    if (state === 'open' || (!state && hasActive)) {
+        section.classList.add('open');
+        arrow.style.transform = "rotate(0deg)";
+    } else {
+        section.classList.remove('open');
+        arrow.style.transform = "rotate(-90deg)";
+    }
+});
+</script>
+
+<div id="assistant-widget">
+    <button id="assistant-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;display:block;"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg></button>
+    <div id="assistant-panel">
+
+        <div id="assistant-header">
+            <span id="assistant-header-title">Assistant</span>
+            <div id="assistant-header-actions">
+                <button id="assistant-clear" title="Clear conversation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:block;"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg></button>
+                <button id="assistant-switch" title="Switch assistant">⇄</button>
+                <button id="assistant-close" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:block;"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+        </div>
+
+        <div id="assistant-selector">
+            <p class="assistant-selector-label">Choose an assistant</p>
+            <button type="button" data-type="crm">CRM Assistant</button>
+            <button type="button" data-type="sales">Sales Assistant</button>
+        </div>
+
+        <div id="assistant-chat">
+            <div id="assistant-messages"></div>
+            <div id="assistant-input-row">
+                <input type="text" id="assistant-input" placeholder="Ask something...">
+                <button type="button" id="assistant-send">Send</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+#assistant-widget, #assistant-widget * {
+    box-sizing: border-box !important;
+}
+
+#assistant-widget {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 999999 !important;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+#assistant-widget #assistant-toggle {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 50% !important;
+    background: #6d4aff !important;
+    color: #fff !important;
+    border: none !important;
+    font-size: 22px !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+#assistant-widget #assistant-panel {
+    width: 360px !important;
+    height: 480px !important;
+    max-width: calc(100vw - 40px) !important;
+    background: #fff !important;
+    border-radius: 14px !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important;
+    position: absolute !important;
+    bottom: 70px !important;
+    right: 0 !important;
+    display: none !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#assistant-widget #assistant-panel.open {
+    display: flex !important;
+}
+
+#assistant-widget #assistant-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #6d4aff !important;
+    color: #fff !important;
+    padding: 12px 16px !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+}
+
+#assistant-widget #assistant-header-title {
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    color: #fff !important;
+}
+
+#assistant-widget #assistant-header-actions {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+#assistant-widget #assistant-header-actions button {
+    background: rgba(255,255,255,0.15) !important;
+    border: none !important;
+    color: #fff !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#assistant-widget #assistant-header-actions button.visible {
+    display: flex !important;
+}
+
+#assistant-widget #assistant-header-actions button:hover {
+    background: rgba(255,255,255,0.28) !important;
+}
+
+#assistant-widget #assistant-selector {
+    padding: 20px 16px !important;
+    display: none !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    flex: 1 !important;
+    width: 100% !important;
+}
+
+#assistant-widget #assistant-selector.visible {
+    display: flex !important;
+}
+
+#assistant-widget .assistant-selector-label {
+    font-size: 13px !important;
+    color: #888 !important;
+    margin: 0 0 4px 0 !important;
+}
+
+#assistant-widget #assistant-selector button {
+    padding: 12px !important;
+    border-radius: 10px !important;
+    border: 1px solid #e2e2e2 !important;
+    background: #fafafa !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    text-align: left !important;
+    width: 100% !important;
+    color: #222 !important;
+}
+
+#assistant-widget #assistant-selector button:hover {
+    background: #eaf1fc !important;
+    border-color: #6d4aff !important;
+}
+
+#assistant-widget #assistant-chat {
+    display: none !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+}
+
+#assistant-widget #assistant-chat.visible {
+    display: flex !important;
+}
+
+#assistant-widget #assistant-messages {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+
+#assistant-widget .assistant-msg {
+    padding: 9px 13px !important;
+    border-radius: 12px !important;
+    max-width: 80% !important;
+    white-space: pre-wrap !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+}
+
+#assistant-widget .assistant-msg.user {
+    background: #6d4aff !important;
+    color: #fff !important;
+    align-self: flex-end !important;
+    border-bottom-right-radius: 4px !important;
+}
+
+#assistant-widget .assistant-msg.assistant {
+    background: #f1f1f3 !important;
+    color: #222 !important;
+    align-self: flex-start !important;
+    border-bottom-left-radius: 4px !important;
+}
+
+#assistant-widget #assistant-input-row {
+    display: flex !important;
+    border-top: 1px solid #eee !important;
+    flex-shrink: 0 !important;
+    padding: 8px !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+
+#assistant-widget #assistant-input {
+    flex: 1 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    padding: 9px 12px !important;
+    font-size: 14px !important;
+    outline: none !important;
+    background: #fff !important;
+    color: #222 !important;
+}
+
+#assistant-widget #assistant-input:focus {
+    border-color: #6d4aff !important;
+}
+
+#assistant-widget #assistant-send {
+    border: none !important;
+    background: #6d4aff !important;
+    color: #fff !important;
+    padding: 0 16px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+#assistant-widget #assistant-send:hover {
+    opacity: 0.9 !important;
+}
+</style>
+
+<script>
+(function() {
+    let currentType = null;
+    let conversationId = null;
+    let hasBothAssistants = false;
+
+    const toggle = document.getElementById('assistant-toggle');
+    const panel = document.getElementById('assistant-panel');
+    const selector = document.getElementById('assistant-selector');
+    const chatBox = document.getElementById('assistant-chat');
+    const messagesEl = document.getElementById('assistant-messages');
+    const input = document.getElementById('assistant-input');
+    const sendBtn = document.getElementById('assistant-send');
+    const headerTitle = document.getElementById('assistant-header-title');
+    const switchBtn = document.getElementById('assistant-switch');
+    const closeBtn = document.getElementById('assistant-close');
+    const clearBtn = document.getElementById('assistant-clear');
+
+    function getCookie(name) {
+        const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return match ? match.pop() : '';
+    }
+
+    function saveState() {
+        if (currentType) {
+            sessionStorage.setItem('assistant_type', currentType);
+        } else {
+            sessionStorage.removeItem('assistant_type');
+        }
+        if (conversationId) {
+            sessionStorage.setItem('assistant_conversation_id', conversationId);
+        } else {
+            sessionStorage.removeItem('assistant_conversation_id');
+        }
+    }
+
+    function appendMessage(role, text) {
+        const div = document.createElement('div');
+        div.className = 'assistant-msg ' + role;
+        div.textContent = text;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showSelector() {
+        chatBox.classList.remove('visible');
+        selector.classList.add('visible');
+        switchBtn.classList.remove('visible');
+        headerTitle.textContent = 'Assistant';
+        currentType = null;
+        conversationId = null;
+        messagesEl.innerHTML = '';
+        saveState();
+    }
+
+    async function openChat(type, restoreConversationId) {
+        currentType = type;
+        conversationId = restoreConversationId || null;
+        selector.classList.remove('visible');
+        chatBox.classList.add('visible');
+        messagesEl.innerHTML = '';
+        headerTitle.textContent = type === 'crm' ? 'CRM Assistant' : 'Sales Assistant';
+        if (hasBothAssistants) {
+            switchBtn.classList.add('visible');
+        } else {
+            switchBtn.classList.remove('visible');
+        }
+        saveState();
+
+        if (conversationId) {
+            try {
+                const res = await fetch('/assistant/history/' + conversationId + '/');
+                const data = await res.json();
+                (data.messages || []).forEach(m => appendMessage(m.role, m.content));
+            } catch (e) {
+                // if history fetch fails, just start fresh silently
+                conversationId = null;
+                saveState();
+            }
+        }
+
+        input.focus();
+    }
+
+    function startNewConversation() {
+        conversationId = null;
+        messagesEl.innerHTML = '';
+        saveState();
+        if (currentType) {
+            appendMessage('assistant', 'Started a new conversation. What can I help with?');
+        }
+    }
+
+    toggle.addEventListener('click', async () => {
+        const opening = !panel.classList.contains('open');
+
+        if (opening) {
+            panel.classList.add('open');
+
+            const alreadyShowing = selector.classList.contains('visible') || chatBox.classList.contains('visible');
+            if (!alreadyShowing) {
+                const res = await fetch('/assistant/config/');
+                const cfg = await res.json();
+
+                if (cfg.crm_access === 'none' && cfg.sales_access === 'none') {
+                    headerTitle.textContent = 'Assistant';
+                    chatBox.classList.add('visible');
+                    appendMessage('assistant', "You don't have access to any assistant. Contact your admin.");
+                    return;
+                }
+
+                hasBothAssistants = cfg.crm_access !== 'none' && cfg.sales_access !== 'none';
+
+                const savedType = sessionStorage.getItem('assistant_type');
+                const savedConversationId = sessionStorage.getItem('assistant_conversation_id');
+
+                if (savedType && (savedType === 'crm' ? cfg.crm_access !== 'none' : cfg.sales_access !== 'none')) {
+                    openChat(savedType, savedConversationId);
+                } else if (hasBothAssistants) {
+                    showSelector();
+                } else {
+                    openChat(cfg.crm_access !== 'none' ? 'crm' : 'sales');
+                }
+            }
+        } else {
+            panel.classList.remove('open');
+        }
+    });
+
+    closeBtn.addEventListener('click', () => { panel.classList.remove('open'); });
+
+    switchBtn.addEventListener('click', showSelector);
+
+    clearBtn.addEventListener('click', startNewConversation);
+
+    selector.querySelectorAll('button[data-type]').forEach(btn => {
+        btn.addEventListener('click', () => openChat(btn.dataset.type));
+    });
+
+    async function sendMessage() {
+        const text = input.value.trim();
+        if (!text || !currentType) return;
+        appendMessage('user', text);
+        input.value = '';
+
+        const res = await fetch('/assistant/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                assistant_type: currentType,
+                message: text,
+                conversation_id: conversationId,
+            }),
+        });
+        const data = await res.json();
+        conversationId = data.conversation_id || conversationId;
+        saveState();
+        appendMessage('assistant', data.response || 'No response.');
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+})();
+</script>
+
+</body>
+</html>

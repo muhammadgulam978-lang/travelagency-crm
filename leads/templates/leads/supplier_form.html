@@ -1,0 +1,59 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ title }} - Travel CRM{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ title }}</h1>
+<div class="form-card">
+    <div class="form-card-header"><h2>{{ title }}</h2></div>
+    <div class="form-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Supplier Name <span class="required">*</span></label>
+                    <input type="text" name="name" class="form-control" required value="{{ supplier.name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Type</label>
+                    <select name="supplier_type" class="form-control">
+                        {% for val, label in type_choices %}
+                        <option value="{{ val }}" {% if supplier.supplier_type == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Contact Person</label>
+                    <input type="text" name="contact_person" class="form-control" value="{{ supplier.contact_person|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ supplier.phone|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ supplier.email|default:'' }}">
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">City</label>
+                    <input type="text" name="city" class="form-control" value="{{ supplier.city|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Country</label>
+                    <input type="text" name="country" class="form-control" value="{{ supplier.country|default:'' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Rates / Notes</label>
+                <textarea name="rates_notes" class="form-control" rows="3" placeholder="Negotiated rates, contract terms, etc.">{{ supplier.rates_notes|default:'' }}</textarea>
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'supplier_list' %}" style="margin-right:12px; color:#666;">Cancel</a>
+                <button type="submit" class="btn">{% if supplier %}Save Changes{% else %}Add Supplier{% endif %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

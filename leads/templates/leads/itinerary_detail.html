@@ -1,0 +1,85 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ itinerary.title }} - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <h1 class="page-title" style="margin:0;">{{ itinerary.title }}</h1>
+    <div class="action-links">
+        <a href="{% url 'itinerary_edit' itinerary.pk %}" class="btn btn-small" style="background:#fff; color:var(--teal); border:1px solid var(--teal);">Edit Details</a>
+        <a href="{% url 'itinerary_list' %}" class="btn btn-small" style="background:#fff; color:#666; border:1px solid #ddd;">Back to List</a>
+    </div>
+</div>
+<p style="color:var(--text-muted); margin-bottom:24px;">
+    <span class="badge badge-purple">{{ itinerary.get_tour_type_display }}</span>
+    {{ itinerary.destination }}
+    {% if itinerary.start_date %} · {{ itinerary.start_date|date:"d M Y" }} - {{ itinerary.end_date|date:"d M Y" }}{% endif %}
+    {% if itinerary.lead %} · Customer: {{ itinerary.lead.name }}{% endif %}
+</p>
+
+<div class="card" style="margin-bottom:24px;">
+    <h2 class="section-heading">Add Day</h2>
+    <form method="post" action="{% url 'itinerary_day_add' itinerary.pk %}">
+        {% csrf_token %}
+        <div class="form-row" style="grid-template-columns: 0.7fr 1fr 1.5fr;">
+            <div class="form-group">
+                <label class="field-label">Day #</label>
+                <input type="number" name="day_number" class="form-control" value="{{ days.count|add:1 }}">
+            </div>
+            <div class="form-group">
+                <label class="field-label">Date</label>
+                <input type="date" name="date" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="field-label">Day Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Arrival & City Tour">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="field-label">Activities</label>
+            <textarea name="activities" class="form-control" rows="2" placeholder="Sightseeing, transfers, excursions..."></textarea>
+        </div>
+        <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="form-group">
+                <label class="field-label">Meals</label>
+                <input type="text" name="meals" class="form-control" placeholder="e.g. Breakfast, Dinner">
+            </div>
+            <div class="form-group">
+                <label class="field-label">Hotel</label>
+                <input type="text" name="hotel_detail" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="field-label">Flight</label>
+                <input type="text" name="flight_detail" class="form-control">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="field-label">Instructions / Notes</label>
+            <textarea name="instructions" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn">+ Add Day</button>
+        </div>
+    </form>
+</div>
+
+<h2 class="section-heading">Day-by-Day Plan</h2>
+{% for d in days %}
+<div class="card" style="margin-bottom:16px; border-left: 4px solid var(--teal);">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <h3 style="margin:0 0 4px;">Day {{ d.day_number }}{% if d.title %} — {{ d.title }}{% endif %}</h3>
+            {% if d.date %}<p style="color:var(--text-muted); margin:0 0 12px; font-size:13px;">{{ d.date|date:"l, d M Y" }}</p>{% endif %}
+        </div>
+        <a href="{% url 'itinerary_day_delete' d.pk %}" onclick="return confirm('Remove Day {{ d.day_number }}?')" style="color:var(--red); font-size:13px;">Remove</a>
+    </div>
+    {% if d.activities %}<p><strong>Activities:</strong> {{ d.activities }}</p>{% endif %}
+    <div style="display:flex; gap:24px; flex-wrap:wrap; font-size:13px; color:var(--text-muted);">
+        {% if d.meals %}<span>🍽️ {{ d.meals }}</span>{% endif %}
+        {% if d.hotel_detail %}<span>🏨 {{ d.hotel_detail }}</span>{% endif %}
+        {% if d.flight_detail %}<span>✈️ {{ d.flight_detail }}</span>{% endif %}
+    </div>
+    {% if d.instructions %}<p style="margin-top:8px;"><em>{{ d.instructions }}</em></p>{% endif %}
+</div>
+{% empty %}
+<div class="card empty-state">No days added yet. Use the form above to build the itinerary.</div>
+{% endfor %}
+{% endblock %}

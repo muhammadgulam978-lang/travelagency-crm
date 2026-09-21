@@ -1,0 +1,44 @@
+{% extends 'leads/base.html' %}
+{% block title %}Ziyarat / Activities — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Ziyarat / Activities</h1><p>Sightseeing and religious site visits, linked to groups and transport.</p></div>
+    <div class="r-page-actions"><a href="{% url 'ziyarat_create' %}" class="r-btn">New activity</a></div>
+</div>
+
+<form method="get" class="r-filters">
+    <select name="city">
+        <option value="">All cities</option>
+        {% for c,l in city_choices %}<option value="{{ c }}" {% if request.GET.city == c %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <select name="when">
+        <option value="">All dates</option>
+        <option value="upcoming" {% if request.GET.when == 'upcoming' %}selected{% endif %}>Upcoming</option>
+        <option value="past" {% if request.GET.when == 'past' %}selected{% endif %}>Past</option>
+    </select>
+    <button type="submit" class="r-btn">Apply</button>
+</form>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Activity</th><th>City</th><th>Date &amp; time</th><th>Group</th><th>Participants</th><th>Pricing</th><th></th></tr></thead>
+            <tbody>
+                {% for a in activities %}
+                <tr>
+                    <td><a href="{% url 'ziyarat_detail' a.pk %}" class="r-cell-title">{{ a.name }}</a>{% if a.guide_name %}<div class="r-cell-sub">Guide: {{ a.guide_name }}</div>{% endif %}</td>
+                    <td>{{ a.get_city_display }}</td>
+                    <td>{{ a.date|date:"j M Y"|default:"—" }} {% if a.time %}{{ a.time|time:"g:i A" }}{% endif %}</td>
+                    <td>{% if a.group %}{{ a.group.name }}{% else %}—{% endif %}</td>
+                    <td>{{ a.participant_count }}</td>
+                    <td>{% if a.is_included %}<span class="r-alert ok">Included</span>{% else %}Rs {{ a.price_per_person|floatformat:0 }}/pax{% endif %}</td>
+                    <td><div class="r-row-actions"><a href="{% url 'ziyarat_edit' a.pk %}">Edit</a></div></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="r-empty"><div class="t">No activities scheduled</div>Add a ziyarat or sightseeing activity to start tracking participants.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

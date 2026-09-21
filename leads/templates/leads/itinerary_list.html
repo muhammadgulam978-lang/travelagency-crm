@@ -1,0 +1,48 @@
+{% extends 'leads/base.html' %}
+{% block title %}Tours & Itineraries - Travel CRM{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 class="page-title" style="margin:0;">Tours & Itineraries</h1>
+    <a href="{% url 'itinerary_create' %}" class="btn">+ New Itinerary</a>
+</div>
+
+<div class="card filter-card" style="margin-bottom:16px;">
+    <form method="get" class="filter-row" style="display:flex; gap:12px; align-items:center;">
+        <select name="type" class="form-control" onchange="this.form.submit()">
+            <option value="">All Tour Types</option>
+            {% for val, label in tour_types %}
+            <option value="{{ val }}" {% if request.GET.type == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead><tr><th>Title</th><th>Type</th><th>Destination</th><th>Dates</th><th>Lead</th><th>Days</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for i in itineraries %}
+            <tr>
+                <td><a href="{% url 'itinerary_detail' i.pk %}">{{ i.title }}</a></td>
+                <td><span class="badge badge-purple">{{ i.get_tour_type_display }}</span></td>
+                <td>{{ i.destination|default:"-" }}</td>
+                <td>{{ i.start_date|date:"d M"|default:"-" }} - {{ i.end_date|date:"d M Y"|default:"-" }}</td>
+                <td>{{ i.lead.name|default:"-" }}</td>
+                <td>{{ i.days.count }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'itinerary_detail' i.pk %}">Open</a>
+                        <a href="{% url 'itinerary_edit' i.pk %}">Edit</a>
+                        <a href="{% url 'itinerary_delete' i.pk %}" onclick="return confirm('Delete {{ i.title }}?')">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="empty-state">No itineraries yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

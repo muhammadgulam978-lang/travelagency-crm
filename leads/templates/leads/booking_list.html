@@ -1,0 +1,57 @@
+{% extends 'leads/base.html' %}
+{% block title %}Bookings - Lead CRM{% endblock %}
+{% block content %}
+<div class="list-header">
+    <h1 class="page-title">Booking List</h1>
+    <div style="display:flex; gap:10px;">
+        <a href="{% url 'booking_create' %}" class="btn">+ Add Booking</a>
+        <a href="{% url 'booking_trash' %}" class="btn" style="background:#e2413f; box-shadow:none;">Trash ({{ trash_count }})</a>
+    </div>
+</div>
+
+<div class="card filter-card">
+    <form method="get" class="filter-row">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="form-control" placeholder="Search by client, company or package...">
+        <button type="submit" class="btn btn-small">Search</button>
+    </form>
+</div>
+
+<div class="card table-card">
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>S.NO</th>
+                <th>Client / Company</th>
+                <th>Package Type</th>
+                <th>No of Pax</th>
+                <th>Total Amount</th>
+                <th>Balance</th>
+                <th>Year</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ booking.client_or_company_name }}</td>
+                <td>{{ booking.get_package_type_display }}</td>
+                <td>{{ booking.no_of_pax }}</td>
+                <td>{{ booking.total_amount|floatformat:2 }}</td>
+                <td class="{% if booking.balance_remaining > 0 %}row-subtext{% endif %}" style="{% if booking.balance_remaining > 0 %}color:var(--red); font-weight:700;{% endif %}">{{ booking.balance_remaining|floatformat:2 }}</td>
+                <td>{{ booking.year }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'booking_delete' booking.pk %}" onclick="return confirm('Move this booking to trash?');">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="empty-state">No bookings yet. Click "+ Add Booking" to create your first one.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

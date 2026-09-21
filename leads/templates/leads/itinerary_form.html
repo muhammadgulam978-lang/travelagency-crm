@@ -1,0 +1,60 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ title }} - Travel CRM{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ title }}</h1>
+<div class="form-card">
+    <div class="form-card-header"><h2>{{ title }}</h2></div>
+    <div class="form-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-row" style="grid-template-columns: 2fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Title <span class="required">*</span></label>
+                    <input type="text" name="title" class="form-control" required value="{{ itinerary.title|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Tour Type</label>
+                    <select name="tour_type" class="form-control">
+                        {% for val, label in tour_types %}
+                        <option value="{{ val }}" {% if itinerary.tour_type == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Destination</label>
+                    <input type="text" name="destination" class="form-control" value="{{ itinerary.destination|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Lead / Customer</label>
+                    <select name="lead" class="form-control">
+                        <option value="">-- Select --</option>
+                        {% for l in leads %}
+                        <option value="{{ l.pk }}" {% if itinerary.lead_id == l.pk %}selected{% endif %}>{{ l.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ itinerary.start_date|date:'Y-m-d'|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ itinerary.end_date|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Notes</label>
+                <textarea name="notes" class="form-control" rows="3">{{ itinerary.notes|default:'' }}</textarea>
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'itinerary_list' %}" style="margin-right:12px; color:#666;">Cancel</a>
+                <button type="submit" class="btn">{% if itinerary %}Save Changes{% else %}Create Itinerary{% endif %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

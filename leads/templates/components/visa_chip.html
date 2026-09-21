@@ -1,0 +1,8 @@
+{% load travel_ui %}
+{# Usage:  {% include "components/visa_chip.html" with visa=v %} #}
+{% visa_chip_class visa.status visa.expected_decision_date as chipclass %}
+<span class="chip-stack">
+    <span class="chip {{ chipclass }}">{{ visa.get_status_display }}</span>
+    {% visa_deadline_note visa.expected_decision_date as note %}
+    {% if note %}<span class="inc-legend">{{ note }}</span>{% endif %}
+</span>

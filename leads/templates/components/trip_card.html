@@ -1,0 +1,59 @@
+{% load travel_ui %}
+{# Usage:  {% include "components/trip_card.html" with booking=b %} #}
+<a href="{% url 'booking_detail' booking.pk %}" class="trip-card">
+
+    <div class="trip-thumb"{% if booking.thumbnail %} style="background-image:url('{{ booking.thumbnail.url }}')"{% endif %}>
+        <div class="trip-thumb-top">
+            <span class="trip-type-chip">{{ booking.get_package_type_display }}</span>
+            {% countdown_class booking.departure_date as cdclass %}
+            <span class="countdown {{ cdclass }}">
+                <span class="countdown-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </span>
+                <span>
+                    <span class="countdown-num">{% countdown_number booking.departure_date %}</span>
+                    <span class="countdown-unit">{% countdown_unit booking.departure_date %}</span>
+                </span>
+            </span>
+        </div>
+        <div class="trip-thumb-bottom">
+            <div class="trip-destination">{{ booking.package_name|default:"Untitled trip" }}</div>
+            <div class="trip-ref">{{ booking.voucher_number|default:booking.pk }} · {{ booking.client.name|default:booking.company.name|default:"—" }}</div>
+        </div>
+    </div>
+
+    <div class="trip-body">
+        <div class="trip-meta">
+            <span class="trip-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                {{ booking.departure_date|date:"d M" }} – {{ booking.arrival_date|date:"d M Y" }}
+            </span>
+            <span class="pax-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                {{ booking|pax_label }}
+            </span>
+        </div>
+
+        {% trip_track booking.booking_status booking.visa_status booking.departure_date as steps %}
+        <div class="trip-track">
+            {% for step in steps %}
+            <div class="track-step {{ step.state }}">
+                <span class="track-dot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </span>
+                <span class="track-label">{{ step.label }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="trip-footer">
+        <div class="trip-price">
+            <small>Total</small>
+            {{ booking.total_amount|default:booking.total_received|default:"—" }}
+        </div>
+        <span class="chip {% if booking.booking_status == 'confirmed' %}chip-success{% elif booking.booking_status == 'cancelled' %}chip-danger{% elif booking.booking_status == 'completed' %}chip-info{% else %}chip-warning{% endif %}">
+            {{ booking.get_booking_status_display }}
+        </span>
+    </div>
+</a>

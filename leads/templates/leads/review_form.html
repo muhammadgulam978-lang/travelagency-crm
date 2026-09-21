@@ -1,0 +1,56 @@
+{% extends 'leads/base.html' %}
+{% block title %}{{ title }} - Travel CRM{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ title }}</h1>
+<div class="form-card">
+    <div class="form-card-header"><h2>{{ title }}</h2></div>
+    <div class="form-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Customer / Lead</label>
+                    <select name="lead" class="form-control">
+                        <option value="">-- Select --</option>
+                        {% for l in leads %}
+                        <option value="{{ l.pk }}">{{ l.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Booking</label>
+                    <select name="booking" class="form-control">
+                        <option value="">-- Select --</option>
+                        {% for b in bookings %}
+                        <option value="{{ b.pk }}">{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="form-group">
+                    <label class="field-label">Rating (1-5)</label>
+                    <select name="rating" class="form-control">
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Average</option>
+                        <option value="2">2 - Poor</option>
+                        <option value="1">1 - Very Poor</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display:flex; align-items:flex-end;">
+                    <label class="field-label" style="margin:0;"><input type="checkbox" name="is_public" style="margin-right:8px;">Mark as public / shareable</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="field-label">Comment</label>
+                <textarea name="comment" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'review_list' %}" style="margin-right:12px; color:#666;">Cancel</a>
+                <button type="submit" class="btn">Save Review</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

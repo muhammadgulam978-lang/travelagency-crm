@@ -1,0 +1,31 @@
+{% extends 'leads/base.html' %}
+{% block title %}Transport — Raabta360{% endblock %}
+{% block content %}
+<div class="r-page-head">
+    <div><h1>Transport</h1><p>Airport transfers and vehicle schedules with pilgrim/group assignment.</p></div>
+    <div class="r-page-actions"><a href="{% url 'transport_create' %}" class="r-btn">New schedule</a></div>
+</div>
+
+<section class="r-panel">
+    <div class="r-table-wrap">
+        <table class="r-table">
+            <thead><tr><th>Transfer</th><th>Route</th><th>Driver</th><th>Group</th><th>Pilgrims</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for s in schedules %}
+                <tr>
+                    <td><a href="{% url 'transport_detail' s.pk %}" class="r-cell-title">{{ s.get_transfer_type_display }}</a><div class="r-cell-sub">{{ s.scheduled_at|date:"j M Y, g:i A"|default:"Not scheduled" }}</div></td>
+                    <td>{{ s.pickup_location|default:"—" }} &rarr; {{ s.dropoff_location|default:"—" }}</td>
+                    <td>{{ s.driver_name|default:"—" }}</td>
+                    <td>{% if s.group %}{{ s.group.name }}{% else %}—{% endif %}</td>
+                    <td>{{ s.pilgrims.count }}</td>
+                    <td><span class="r-status st-{% if s.status == 'completed' %}confirmed{% elif s.status == 'cancelled' %}cancelled{% else %}pending{% endif %}">{{ s.get_status_display }}</span></td>
+                    <td><div class="r-row-actions"><a href="{% url 'transport_edit' s.pk %}">Edit</a></div></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="r-empty"><div class="t">No transport schedules</div>Add a transfer and assign pilgrims to it.</div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
