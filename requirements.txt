@@ -10,3 +10,6 @@ weasyprint==62.3
 python-decouple==3.8
 psycopg[binary]==3.2.10
 gunicorn
+twilio
+google-auth-oauthlib
+google-api-python-client
