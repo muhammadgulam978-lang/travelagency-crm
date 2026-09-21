@@ -13,3 +13,4 @@ gunicorn
 twilio
 google-auth-oauthlib
 google-api-python-client
+whitenoise
